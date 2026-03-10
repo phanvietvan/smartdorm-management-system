@@ -1,0 +1,104 @@
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { authApi, type User } from '../api/auth'
+
+type GoogleLoginResult =
+  | { state: 'approved'; message?: string }
+  | { state: 'pending'; message?: string }
+  | { state: 'blocked'; message?: string }
+
+type AuthContextType = {
+  user: User | null
+  loading: boolean
+  login: (email: string, password: string) => Promise<void>
+  googleLogin: (credential: string) => Promise<GoogleLoginResult>
+  register: (data: { email: string; password: string; fullName: string; phone?: string }) => Promise<void>
+  logout: () => void
+}
+
+const AuthContext = createContext<AuthContextType | null>(null)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const saved = localStorage.getItem('user')
+    if (token && saved) {
+      authApi.me()
+        .then((r) => { setUser(r.data) })
+        .catch(() => { localStorage.clear(); setUser(null) })
+        .finally(() => setLoading(false))
+    } else {
+      setUser(null)
+      setLoading(false)
+    }
+  }, [])
+
+  const login = async (email: string, password: string) => {
+    const { data } = await authApi.login(email, password)
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('user', JSON.stringify(data.user))
+    setUser(data.user)
+  }
+
+  const googleLogin = async (credential: string): Promise<GoogleLoginResult> => {
+    try {
+      const response = await authApi.googleLogin(credential)
+
+      // 200 + token => approved, lưu token & user
+      if (response.status === 200) {
+        const data = response.data as { token: string; user: User }
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
+        setUser(data.user)
+        return { state: 'approved' }
+      }
+
+      // 201 => tạo mới, chờ duyệt
+      if (response.status === 201) {
+        const message = (response.data as { message?: string })?.message
+        return { state: 'pending', message }
+      }
+
+      // Các mã khác coi như blocked
+      const message = (response.data as { message?: string })?.message
+      return { state: 'blocked', message }
+    } catch (err: any) {
+      const status = err?.response?.status
+      const message = err?.response?.data?.message as string | undefined
+
+      if (status === 403) {
+        // 403 + message pending/rejected
+        return { state: 'blocked', message }
+      }
+
+      throw err
+    }
+  }
+
+  const register = async (d: { email: string; password: string; fullName: string; phone?: string }) => {
+    const { data } = await authApi.register(d)
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('user', JSON.stringify(data.user))
+    setUser(data.user)
+  }
+
+  const logout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, loading, login, googleLogin, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  return ctx
+}
