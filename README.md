@@ -1,1 +1,0 @@
-# smartdorm-management-system
