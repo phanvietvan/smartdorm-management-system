@@ -8,6 +8,12 @@ export type User = {
   fullName: string
   role: string
   status?: UserStatus
+  roomId?: string | { _id: string; name: string }
+  managedAreaId?: string | { _id: string; name: string }
+  phone?: string
+  avatarUrl?: string
+  idCardNumber?: string
+  address?: string
 }
 
 export const authApi = {

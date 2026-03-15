@@ -1,0 +1,67 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 195 62% 61%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 44%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 64%;
+    --muted-foreground: 0 0% 71%;
+
+    --accent: 195 62% 61%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 0 0% 84%;
+    --input: 0 0% 84%;
+    --ring: 195 62% 61%;
+
+    --radius: 0.5rem;
+
+    --smartdorm-cyan: 195 62% 61%;
+    --smartdorm-gray: 0 0% 44%;
+    --smartdorm-dark: 0 0% 25%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', -apple-system, Roboto, Helvetica, sans-serif;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-family: 'Poppins', -apple-system, Roboto, Helvetica, sans-serif;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+}

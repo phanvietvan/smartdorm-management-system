@@ -19,6 +19,7 @@ export const roomsApi = {
   getAvailable: () => api.get<Room[]>('/rooms/available'),
   getAll: () => api.get<Room[]>('/rooms'),
   getById: (id: string) => api.get<Room>(`/rooms/${id}`),
+  getMyRoom: () => api.get<Room>('/rooms/my-room'),
   create: (data: Partial<Room>) => api.post<Room>('/rooms', data),
   update: (id: string, data: Partial<Room>) => api.put<Room>(`/rooms/${id}`, data),
   delete: (id: string) => api.delete(`/rooms/${id}`),

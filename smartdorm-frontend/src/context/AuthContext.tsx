@@ -18,19 +18,52 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('user')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return null
+      }
+    }
+    return null
+  })
+  const [loading, setLoading] = useState(() => {
+    const token = localStorage.getItem('token')
+    const saved = localStorage.getItem('user')
+    if (!token) return false
+    if (!saved) return true
+    try {
+      const u = JSON.parse(saved)
+      // If user is pending or rejected in cache, we MUST wait for background verification
+      // to see if they've been approved since last session.
+      if (u.status !== 'approved') return true
+    } catch {
+      return true
+    }
+    return false
+  })
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    const saved = localStorage.getItem('user')
-    if (token && saved) {
+    if (token) {
+      // If we don't have a user or user is not approved, we definitely show loading
+      const needsLoading = !user || user.status !== 'approved'
+      if (needsLoading) setLoading(true)
+      
       authApi.me()
-        .then((r) => { setUser(r.data) })
-        .catch(() => { localStorage.clear(); setUser(null) })
+        .then((r) => { 
+          setUser(r.data)
+          localStorage.setItem('user', JSON.stringify(r.data))
+        })
+        .catch(() => { 
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          setUser(null) 
+        })
         .finally(() => setLoading(false))
     } else {
-      setUser(null)
       setLoading(false)
     }
   }, [])

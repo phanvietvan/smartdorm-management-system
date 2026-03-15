@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { paymentsApi, type Payment } from '../api/payments'
 import { billsApi, type Bill } from '../api/bills'
+import { notificationsApi } from '../api/notifications'
 import { uploadApi } from '../api/upload'
 import { useAuth } from '../context/AuthContext'
 
@@ -68,11 +69,19 @@ export default function Payments() {
         method: form.method,
         evidenceImage: evidenceUrl 
       })
+
+      // Gửi thông báo cho admin và chủ trọ khi người thuê gửi thanh toán
+      const notifyAdminLandlord = (title: string, content: string) => {
+        notificationsApi.broadcast({ title, content, type: 'bill', targetRole: 'admin' }).catch(() => {})
+        notificationsApi.broadcast({ title, content, type: 'bill', targetRole: 'landlord' }).catch(() => {})
+      }
+      notifyAdminLandlord('Yêu cầu thanh toán mới', 'Người thuê đã gửi yêu cầu thanh toán, cần xác nhận.')
       
       load()
       setShowForm(false)
       setForm({ billId: '', amount: 0, method: 'cash' })
       setSelectedFile(null)
+      window.dispatchEvent(new CustomEvent('refetch-notifications'))
     } catch (err: any) {
       setError(err.response?.data?.message || 'Lỗi gửi yêu cầu thanh toán')
     } finally {

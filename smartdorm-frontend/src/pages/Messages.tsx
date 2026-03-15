@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { messagesApi, type ChatItem, type Message } from '../api/messages'
+import { notificationsApi } from '../api/notifications'
 import { useAuth } from '../context/AuthContext'
 
 export default function Messages() {
@@ -35,6 +36,8 @@ export default function Messages() {
     }, 100)
   }
 
+  const isTenantOrStaff = user && !['admin', 'manager', 'landlord'].includes(user.role)
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUserId || !content.trim()) return
@@ -42,6 +45,13 @@ export default function Messages() {
     setSending(true)
     messagesApi.send({ receiverId: selectedUserId, content: content.trim() })
       .then(() => {
+        // Khi người thuê/nhân viên gửi tin nhắn, thông báo cho admin và chủ trọ
+        if (isTenantOrStaff && user?.fullName) {
+          const msg = `Tin nhắn mới từ ${user.fullName}: ${content.trim().slice(0, 80)}${content.trim().length > 80 ? '...' : ''}`
+          notificationsApi.broadcast({ title: 'Tin nhắn mới', content: msg, type: 'general', targetRole: 'admin' }).catch(() => {})
+          notificationsApi.broadcast({ title: 'Tin nhắn mới', content: msg, type: 'general', targetRole: 'landlord' }).catch(() => {})
+          window.dispatchEvent(new CustomEvent('refetch-notifications'))
+        }
         messagesApi.getConversation(selectedUserId).then((r) => {
           setMessages(r.data)
           scrollToBottom()

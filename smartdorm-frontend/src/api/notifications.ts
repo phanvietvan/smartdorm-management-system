@@ -10,10 +10,34 @@ export type Notification = {
   createdAt: string
 }
 
+/**
+ * GET /notifications: BE trả { success: true, data: [ ... ] }.
+ * Axios res.data = body → list = res.data.data (lịch sử tất cả thông báo từ DB).
+ */
+function parseNotificationList(res: any): Notification[] {
+  const body = res?.data
+  if (Array.isArray(body)) return body
+  const list = body?.data ?? body?.notifications ?? body?.list ?? body?.items ?? body?.result
+  if (Array.isArray(list)) return list
+  return []
+}
+
 export const notificationsApi = {
-  getAll: (params?: { isRead?: boolean }) =>
-    api.get<Notification[]>('/notifications', { params }),
+  /** Lấy thông báo: không truyền isRead = lấy tất cả từ DB; isRead=false = chỉ chưa đọc. */
+  getAll: async (params?: { isRead?: boolean; limit?: number }) => {
+    const query: Record<string, string | number | boolean> = {}
+    if (params?.isRead !== undefined) {
+      query.isRead = params.isRead
+      query.read = params.isRead
+    }
+    if (params?.limit != null) query.limit = params.limit
+    const res = await api.get('/notifications', { params: query })
+    return { ...res, data: parseNotificationList(res) }
+  },
   markRead: (id: string) => api.put(`/notifications/${id}/read`),
   broadcast: (data: { title: string; content: string; type?: string; targetRole?: string; roomId?: string }) =>
     api.post<Notification>('/notifications/broadcast', data),
+  /** Tạo thông báo cho một user (khi admin duyệt, gán phòng, đổi role...) */
+  createForUser: (data: { userId: string; title: string; content: string; type?: Notification['type'] }) =>
+    api.post<Notification>('/notifications', data),
 }

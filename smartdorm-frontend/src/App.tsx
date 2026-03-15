@@ -24,7 +24,21 @@ import PendingApproval from './pages/PendingApproval'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
-  if (loading) return <div className="content">Đang tải...</div>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc]">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+        <p className="mt-6 text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">
+          Đang khởi tạo hệ thống
+        </p>
+      </div>
+    )
+  }
   if (!user) return <Navigate to="/login" replace />
   return <>{children}</>
 }

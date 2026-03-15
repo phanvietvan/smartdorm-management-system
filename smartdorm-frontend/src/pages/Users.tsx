@@ -98,9 +98,16 @@ export default function Users() {
 
   const handleAssign = async () => {
     if (!selectedUser || !selectedRoomId) return
+    const room = rooms.find(r => r._id === selectedRoomId)
     setAssigning(true)
     try {
       await usersApi.assignTenant({ userId: selectedUser._id, roomId: selectedRoomId })
+      await notificationsApi.createForUser({
+        userId: selectedUser._id,
+        title: 'Đã được gán phòng',
+        content: room ? `Bạn đã được gán vào phòng ${room.name}.` : 'Bạn đã được gán phòng mới.',
+        type: 'general',
+      }).catch(() => {})
       setIsModalOpen(false)
       loadData()
     } catch (err: any) {
@@ -120,13 +127,13 @@ export default function Users() {
       const { roomId, ...userData } = userForm
       const { data: newUser } = await usersApi.create(userData as any)
       
-      // Auto approve if created by admin/manager
+      // Auto approve if created by admin/manager (BE gửi thông báo "Tài khoản đã được tạo" / duyệt / gán phòng)
       await usersApi.approve(newUser._id)
-      
+
       if (roomId) {
         await usersApi.assignTenant({ userId: newUser._id, roomId })
       }
-      
+
       setIsCreateModalOpen(false)
       setUserForm({
         fullName: '',

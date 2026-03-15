@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { maintenanceApi, type MaintenanceRequest } from '../api/maintenance'
+import { notificationsApi } from '../api/notifications'
 import { roomsApi, type Room } from '../api/rooms'
 import { useAuth } from '../context/AuthContext'
+import SuccessScreen from '../components/SuccessScreen'
 
 export default function Maintenance() {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([])
@@ -12,7 +14,8 @@ export default function Maintenance() {
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ roomId: '', title: '', description: '' })
-  
+  const [showSuccess, setShowSuccess] = useState(false)
+
   const { user } = useAuth()
   const isTenant = user?.role === 'tenant'
 
@@ -25,18 +28,43 @@ export default function Maintenance() {
     load().finally(() => setLoading(false))
   }, [])
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setError('')
-    maintenanceApi.create(form)
-      .then(() => { 
-        load(); 
-        setShowForm(false); 
-        setForm({ roomId: '', title: '', description: '' }) 
-      })
-      .catch((err) => setError(err.response?.data?.message || 'Lỗi tạo yêu cầu sửa chữa'))
-      .finally(() => setSubmitting(false))
+    const reportTitle = form.title || 'Yêu cầu sửa chữa'
+    const content = form.description ? `${reportTitle}: ${form.description}` : reportTitle
+    try {
+      await maintenanceApi.create(form)
+      // Gửi thông báo cho admin và chủ trọ khi người thuê báo sự cố (backend phải cho phép tenant gọi với targetRole admin/landlord)
+      try {
+        await notificationsApi.broadcast({
+          title: 'Báo cáo sự cố mới',
+          content: `Người thuê báo: ${content}`,
+          type: 'maintenance',
+          targetRole: 'admin',
+        })
+      } catch (broadcastErr: any) {
+        console.warn('Broadcast to admin failed:', broadcastErr?.response?.status, broadcastErr?.response?.data)
+      }
+      try {
+        await notificationsApi.broadcast({
+          title: 'Báo cáo sự cố mới',
+          content: `Người thuê báo: ${content}`,
+          type: 'maintenance',
+          targetRole: 'landlord',
+        })
+      } catch (broadcastErr: any) {
+        console.warn('Broadcast to landlord failed:', broadcastErr?.response?.status, broadcastErr?.response?.data)
+      }
+      setForm({ roomId: '', title: '', description: '' })
+      setShowSuccess(true)
+      window.dispatchEvent(new CustomEvent('refetch-notifications'))
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Lỗi tạo yêu cầu sửa chữa')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const statusLabel: Record<string, string> = { pending: 'Chờ xử lý', in_progress: 'Đang sửa', completed: 'Hoàn thành' }
@@ -51,6 +79,18 @@ export default function Maintenance() {
       <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   )
+
+  if (showSuccess) {
+    return (
+      <SuccessScreen
+        message="Gửi yêu cầu sửa chữa thành công!"
+        onDone={() => {
+          setShowSuccess(false)
+          load()
+        }}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
