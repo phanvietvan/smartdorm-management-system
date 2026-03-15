@@ -1,5 +1,6 @@
 const Visitor = require("../models/Visitor");
 const { ROLES } = require("../config/roles");
+const { notifyUser } = require("../utils/notifyUser");
 
 exports.getAll = async (req, res) => {
   try {
@@ -48,6 +49,8 @@ exports.create = async (req, res) => {
     });
     await visitor.save();
     const populated = await Visitor.findById(visitor._id).populate("roomId", "name").populate("tenantId", "fullName");
+    const tid = visitor.tenantId && visitor.tenantId.toString ? visitor.tenantId.toString() : visitor.tenantId;
+    if (tid) await notifyUser(tid, "Khách vào", `Khách "${name}" đã được đăng ký vào phòng của bạn.`, "general");
     res.status(201).json(populated);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -56,12 +59,12 @@ exports.create = async (req, res) => {
 
 exports.checkOut = async (req, res) => {
   try {
-    const visitor = await Visitor.findByIdAndUpdate(
-      req.params.id,
-      { checkOutAt: new Date() },
-      { new: true }
-    );
+    const visitor = await Visitor.findById(req.params.id);
     if (!visitor) return res.status(404).json({ message: "Visitor not found" });
+    visitor.checkOutAt = new Date();
+    await visitor.save();
+    const tid = visitor.tenantId && visitor.tenantId.toString ? visitor.tenantId.toString() : visitor.tenantId;
+    if (tid) await notifyUser(tid, "Khách đã ra", "Khách đã được ghi nhận ra khỏi khu vực.", "general");
     res.json(visitor);
   } catch (err) {
     res.status(400).json({ message: err.message });

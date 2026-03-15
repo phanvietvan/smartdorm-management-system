@@ -2,6 +2,9 @@
 
 **Địa chỉ gốc:** `http://localhost:5000`
 
+> [!TIP]
+> **Tài liệu API Tương tác (Swagger):** Truy cập [http://localhost:5000/api-docs](http://localhost:5000/api-docs) để xem tài liệu đầy đủ và thử nghiệm các API trực tiếp trên trình duyệt.
+
 ## Xác thực
 
 Gửi token trong header: `Authorization: Bearer <token>`
@@ -83,6 +86,14 @@ Gửi token trong header: `Authorization: Bearer <token>`
 | POST | `/messages` | ✅ | Gửi tin nhắn |
 | PUT | `/messages/read/:userId` | ✅ | Đánh dấu đã đọc |
 
+### Thông báo (Notifications)
+| Phương thức | Endpoint | Đăng nhập | Mô tả |
+|-------------|----------|-----------|-------|
+| GET | `/notifications` | ✅ | Danh sách thông báo của user (query: `isRead=false` chỉ lấy chưa đọc) |
+| POST | `/notifications` | ✅ | Tạo thông báo cho một user (body: `userId`, `title`, `content`, `type` optional) |
+| PUT | `/notifications/:id/read` | ✅ | Đánh dấu đã đọc |
+| POST | `/notifications/broadcast` | ✅ | Gửi thông báo hàng loạt (admin/manager/landlord mọi lúc; tenant khi `targetRole` = admin/landlord – báo sự cố, thanh toán, tin nhắn). Xem mục **API Broadcast** bên dưới. |
+
 ### Yêu cầu thuê phòng (Rental Requests)
 | Phương thức | Endpoint | Đăng nhập | Mô tả |
 |-------------|----------|-----------|-------|
@@ -132,20 +143,53 @@ POST /auth/login
 // Trả về: { "token": "...", "user": { "id", "email", "fullName", "role" } }
 ```
 
-### Tạo hóa đơn
-```json
+### Tạo hóa đơn (và thông báo cho khách)
+Khi tạo hóa đơn xong, **tài khoản khách (tenantId) sẽ nhận thông báo ngay** ("Hóa đơn mới"). Khách lấy thông báo qua `GET /notifications`.
+
+**Request:**
+```http
 POST /bills
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+```json
 {
-  "roomId": "...",
-  "tenantId": "...",
+  "roomId": "507f1f77bcf86cd799439011",
+  "tenantId": "507f1f77bcf86cd799439012",
   "month": 3,
   "year": 2025,
-  "rentAmount": 2000000,
-  "electricityAmount": 150000,
-  "waterAmount": 50000,
-  "dueDate": "2025-03-31"
+  "prevWater": 10,
+  "currWater": 15,
+  "prevElec": 100,
+  "currElec": 120,
+  "otherAmount": 0,
+  "dueDate": "2025-03-31",
+  "note": ""
 }
 ```
+- Bắt buộc: `roomId`, `tenantId`, `month`, `year`. Điện/nước có thể tính từ `prevWater`, `currWater`, `prevElec`, `currElec` (nếu không gửi backend dùng 0).
+
+**Response 201:**
+```json
+{
+  "roomId": { "_id": "...", "name": "P101" },
+  "tenantId": { "_id": "...", "fullName": "Nguyễn Văn A" },
+  "month": 3,
+  "year": 2025,
+  "totalAmount": 2500000,
+  ...
+}
+```
+Sau khi tạo xong, backend tự gửi thông báo cho user có `tenantId` với title "Hóa đơn mới", type `bill`.
+
+**Khách lấy thông báo (chuông):**
+```http
+GET /notifications?isRead=false
+Authorization: Bearer <token>
+```
+Response: `{ "success": true, "data": [ { "_id", "title", "content", "type", "isRead", "createdAt" }, ... ] }`
+
+---
 
 ### Tạo yêu cầu sửa chữa
 ```json
@@ -155,6 +199,19 @@ POST /maintenance
   "title": "Điều hòa hỏng",
   "description": "Không lạnh"
 }
+```
+
+### Tạo thông báo cho một user (Admin khi duyệt user, gán phòng, v.v.)
+```json
+POST /notifications
+{
+  "userId": "507f1f77bcf86cd799439011",
+  "title": "Đã được duyệt",
+  "content": "Tài khoản của bạn đã được quản trị viên duyệt. Bạn có thể sử dụng đầy đủ chức năng.",
+  "type": "system"
+}
+// type (optional): "system" | "bill" | "maintenance" | "contract" | "general"
+// Response 201: { "success": true, "data": { "_id", "userId", "title", "content", "type", "isRead", "createdAt" } }
 ```
 
 ### Gửi yêu cầu thuê (Khách - không cần đăng nhập)
@@ -168,3 +225,130 @@ POST /rental-requests
   "message": "Muốn thuê phòng"
 }
 ```
+
+---
+
+## API luồng: Tạo hóa đơn → Thông báo cho khách
+
+| Bước | Method | URL | Mô tả |
+|------|--------|-----|--------|
+| 1 | **POST** | `/bills` | Admin/Chủ trọ tạo hóa đơn. Body: `roomId`, `tenantId`, `month`, `year` (bắt buộc); `prevWater`, `currWater`, `prevElec`, `currElec`, `otherAmount`, `dueDate`, `note` (tùy chọn). Sau khi tạo xong, backend **tự gửi thông báo** cho user `tenantId`. |
+| 2 | **GET** | `/notifications?isRead=false` | Khách (tenant) gọi để lấy danh sách thông báo chưa đọc, trong đó có "Hóa đơn mới". Response: `{ "success": true, "data": [ ... ] }`. |
+| 3 | **PUT** | `/notifications/:id/read` | Khách đánh dấu đã đọc thông báo (optional). |
+
+**Thông báo khách nhận khi có hóa đơn mới:** `title`: "Hóa đơn mới", `type`: "bill", `content`: "Bạn có hóa đơn tháng M/Y. Tổng: Xđ. Vui lòng thanh toán trước hạn."
+
+---
+
+## API Broadcast & Báo cáo sự cố
+
+### POST `/notifications/broadcast` – Gửi thông báo hàng loạt
+
+**Header:** `Authorization: Bearer <token>`
+
+**Body (JSON):**
+
+| Field | Kiểu | Bắt buộc | Mô tả |
+|-------|------|----------|--------|
+| `title` | string | Có | Tiêu đề thông báo |
+| `content` | string | Có | Nội dung thông báo |
+| `type` | string | Không | `general` \| `bill` \| `maintenance` \| `system` \| `contract` (mặc định `general`) |
+| `targetRole` | string | Không | Đối tượng nhận: `admin` \| `landlord` \| `tenant` \| `staff` \| `""` (để trống = gửi toàn bộ user) |
+| `roomId` | string | Không | Nếu có: gửi cho (các) tenant thuộc phòng này (bỏ qua targetRole) |
+
+**Ai được gọi API này:**
+
+| Người gọi (`req.user.role`) | Khi nào |
+|------------------------------|--------|
+| `admin`, `manager`, `landlord` | Gửi thông báo hàng loạt từ trang Thông báo (tùy chọn targetRole, roomId). |
+| `tenant` | Khi body có `targetRole` là `admin` hoặc `landlord` – dùng cho **báo sự cố, thanh toán, tin nhắn** (gửi thông báo cho admin/chủ trọ). |
+| Khác | 403 *"Bạn không có quyền thực hiện thao tác này."* |
+
+**Backend khi nhận broadcast:** Tạo **từng bản ghi thông báo** cho **từng user** thuộc targetRole (mỗi admin/landlord một document với `userId` = user đó), để họ thấy trong chuông và trang Thông báo khi gọi GET `/notifications`.
+
+**Khi nhận broadcast – Gửi thông báo cho ai (theo `targetRole`):**
+
+| `targetRole` | Tạo thông báo cho user có role |
+|--------------|--------------------------------|
+| `admin` | `admin`, `manager` |
+| `landlord` | `landlord` |
+| `tenant` | `tenant` |
+| `staff` | `maintenance_staff`, `accountant`, `security` |
+| `""` / không gửi | Toàn bộ user |
+
+**Khi có `roomId`:** Bỏ qua `targetRole`, tạo thông báo cho (các) **tenant** có `roomId` trùng với `roomId` trong body.
+
+**Ví dụ request – Admin gửi cho tất cả tenant:**
+```http
+POST /notifications/broadcast
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+```json
+{
+  "title": "Thông báo chung",
+  "content": "Kỳ thanh toán tháng 4 sắp đến hạn.",
+  "type": "bill",
+  "targetRole": "tenant"
+}
+```
+
+**Ví dụ request – Tenant gửi thông báo cho admin/chủ trọ (báo sự cố, thanh toán, tin nhắn):**
+
+FE gọi **hai lần** (một cho admin/manager, một cho landlord):
+
+1. Gửi cho admin/manager:
+```json
+{
+  "title": "Báo cáo sự cố mới",
+  "content": "Người thuê báo: Điều hòa phòng P101 không hoạt động.",
+  "type": "maintenance",
+  "targetRole": "admin"
+}
+```
+
+2. Gửi cho landlord:
+```json
+{
+  "title": "Báo cáo sự cố mới",
+  "content": "Người thuê báo: Điều hòa phòng P101 không hoạt động.",
+  "type": "maintenance",
+  "targetRole": "landlord"
+}
+```
+
+Có thể dùng cùng cách với `type: "bill"` (thanh toán) hoặc `type: "general"` (tin nhắn). Backend tạo từng bản ghi cho từng user nhận nên admin/landlord thấy trong chuông và trang Thông báo.
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "message": "Đã gửi thông báo tới 5 người dùng"
+}
+```
+
+---
+
+## Backend đảm bảo – Admin nhận thông báo như người dùng
+
+1. **Khi nhận POST `/notifications/broadcast`** (từ tenant, với `targetRole: 'admin'` hoặc `'landlord'`):  
+   Tạo **một bản ghi thông báo cho từng user** thuộc targetRole; mỗi bản ghi có **`userId` = _id** của admin/landlord đó (giống cách gửi cho từng tenant). Không lưu một bản ghi “broadcast” chung.
+
+2. **GET `/notifications`** (cho mọi user, kể cả admin):  
+   Chỉ trả về thông báo có **userId/recipient = `req.user._id`** (user đang đăng nhập). **Không phân biệt role**; admin và tenant đều nhận đúng danh sách của mình.
+
+3. **Role admin trong DB:**  
+   User admin cần có **`role: 'admin'`** hoặc **`role: 'manager'`** (đúng chuỗi, thường là chữ thường) để backend tìm đúng khi broadcast `targetRole: 'admin'`. Backend dùng truy vấn không phân biệt hoa thường nên `Admin`/`ADMIN` cũng match.
+
+Khi backend làm đúng các bước trên, **admin sẽ thấy thông báo trong chuông và trang Thông báo giống người dùng (tenant)**. Nếu vẫn không thấy: bấm **“Làm mới”** trên chuông hoặc mở **Trung tâm Thông báo**, và kiểm tra backend đã tạo từng bản ghi cho từng admin/landlord chưa (xem response broadcast: “Đã gửi thông báo tới N người” với N > 0).
+
+---
+
+## Troubleshooting – Admin không thấy thông báo
+
+Khi **tenant gửi thông báo** (báo sự cố, thanh toán, tin nhắn), FE gọi POST `/notifications/broadcast` với `targetRole: admin` và/hoặc `targetRole: landlord`. Để **admin/chủ trọ thấy thông báo** trên trang Thông báo và chuông:
+
+1. **Khi nhận broadcast với `targetRole: 'admin'`:** Backend **tạo từng bản ghi thông báo** (document) với **userId = từng user** có role `admin` hoặc `manager` (mỗi admin/manager một bản ghi, recipient = chính user đó). Tương tự `targetRole: 'landlord'` → tạo thông báo cho từng user có role `landlord`.
+2. **GET `/notifications`:** Trả về danh sách thông báo **của user đang đăng nhập** (lọc theo `req.user._id`). Nếu backend chỉ lưu “broadcast” chung mà không gán từng thông báo cho từng user nhận thì admin sẽ không có bản ghi nào khi gọi GET.
+
+**Backend đã đảm bảo:** (1) Broadcast tạo **từng bản ghi** cho từng admin/landlord, mỗi bản ghi có `userId` = người nhận; (2) GET `/notifications` chỉ trả về thông báo có `userId` = user đăng nhập, không phân biệt role; (3) Truy vấn role không phân biệt hoa thường. **Nếu admin vẫn không thấy:** (1) DB phải có user với `role: "admin"` hoặc `"manager"`; (2) FE gửi đúng `targetRole: "admin"` / `"landlord"`; (3) Xem response broadcast – nếu “Đã gửi thông báo tới 0 người” thì không có user match; (4) Bấm **Làm mới** chuông hoặc mở **Trung tâm Thông báo**, đảm bảo đăng nhập đúng tài khoản admin/landlord.

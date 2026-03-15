@@ -16,7 +16,21 @@ const dashboardRoutes = require("./routes/dashboard");
 const serviceRoutes = require("./routes/services");
 const notificationRoutes = require("./routes/notifications");
 const uploadRoutes = require("./routes/upload");
+const swaggerSpec = require("./config/swagger");
+const swaggerUi = require("swagger-ui-express");
 const path = require("path");
+
+// Register all models explicitly to avoid MissingSchemaError when using population
+require("./models/User");
+require("./models/Room");
+require("./models/Area");
+require("./models/Bill");
+require("./models/Service");
+require("./models/Payment");
+require("./models/MaintenanceRequest");
+require("./models/Notification");
+require("./models/Message");
+require("./models/Visitor");
 
 const app = express();
 
@@ -35,6 +49,9 @@ mongoose.connect(DB_URI)
     console.error(err);
     process.exit(1);
   });
+
+// --- Swagger UI ---
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // --- Routes ---
 app.get("/", (req, res) => {

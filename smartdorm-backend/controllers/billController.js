@@ -2,6 +2,7 @@ const Bill = require("../models/Bill");
 const Service = require("../models/Service");
 const Room = require("../models/Room");
 const { ROLES } = require("../config/roles");
+const { notifyUser } = require("../utils/notifyUser");
 
 const filterByUser = (req) => {
   const filter = {};
@@ -84,6 +85,16 @@ exports.create = async (req, res) => {
     });
     await bill.save();
     const populated = await Bill.findById(bill._id).populate("roomId", "name").populate("tenantId", "fullName");
+    // Gửi thông báo ngay cho tài khoản khách (tenant) khi vừa tạo hóa đơn
+    const tenantIdForNotif = tenantId && typeof tenantId === "object" ? tenantId.toString() : tenantId;
+    if (tenantIdForNotif) {
+      await notifyUser(
+        tenantIdForNotif,
+        "Hóa đơn mới",
+        `Bạn có hóa đơn tháng ${month}/${year}. Tổng: ${totalAmount.toLocaleString("vi-VN")}đ. Vui lòng thanh toán trước hạn.`,
+        "bill"
+      );
+    }
     res.status(201).json(populated);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -116,6 +127,10 @@ exports.update = async (req, res) => {
     
     bill.totalAmount = bill.rentAmount + bill.electricityAmount + bill.waterAmount + bill.otherAmount;
     await bill.save();
+    if (status === "paid") {
+      const tenantId = bill.tenantId && bill.tenantId.toString ? bill.tenantId.toString() : bill.tenantId;
+      if (tenantId) await notifyUser(tenantId, "Hóa đơn đã thanh toán", `Hóa đơn tháng ${bill.month}/${bill.year} đã được thanh toán.`, "bill");
+    }
     res.json(bill);
   } catch (err) {
     res.status(400).json({ message: err.message });

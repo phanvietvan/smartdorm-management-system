@@ -1,6 +1,7 @@
 const Payment = require("../models/Payment");
 const Bill = require("../models/Bill");
 const { ROLES } = require("../config/roles");
+const { notifyUser } = require("../utils/notifyUser");
 
 const filterByUser = (req) => {
   const filter = {};
@@ -59,6 +60,8 @@ exports.create = async (req, res) => {
     });
     await payment.save();
     const populated = await Payment.findById(payment._id).populate("billId").populate("tenantId", "fullName");
+    const tenantId = bill.tenantId && bill.tenantId.toString ? bill.tenantId.toString() : bill.tenantId;
+    if (tenantId) await notifyUser(tenantId, "Đã gửi thanh toán", "Bạn đã tạo thanh toán thành công. Đang chờ quản trị xác nhận.", "bill");
     res.status(201).json(populated);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -67,13 +70,19 @@ exports.create = async (req, res) => {
 
 exports.confirm = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id);
+    const payment = await Payment.findById(req.params.id).populate("billId", "month year");
     if (!payment) return res.status(404).json({ message: "Payment not found" });
     payment.status = "confirmed";
     payment.confirmedBy = req.user._id;
     payment.confirmedAt = new Date();
     await payment.save();
     await Bill.findByIdAndUpdate(payment.billId, { status: "paid" });
+    const tenantId = payment.tenantId && payment.tenantId.toString ? payment.tenantId.toString() : payment.tenantId;
+    if (tenantId && payment.billId) {
+      const bill = payment.billId;
+      const monthYear = bill.month && bill.year ? `${bill.month}/${bill.year}` : "";
+      await notifyUser(tenantId, "Thanh toán đã xác nhận", `Thanh toán của bạn${monthYear ? ` (hóa đơn ${monthYear})` : ""} đã được quản trị xác nhận.`, "bill");
+    }
     res.json(payment);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -117,6 +126,9 @@ exports.vnpayIpn = async (req, res) => {
           confirmedAt: new Date()
         });
         await payment.save();
+        const { notifyUser } = require("../utils/notifyUser");
+        const tenantId = bill.tenantId && bill.tenantId.toString ? bill.tenantId.toString() : bill.tenantId;
+        if (tenantId) await notifyUser(tenantId, "Thanh toán đã xác nhận", "Thanh toán VNPay của bạn đã được xác nhận thành công.", "bill");
       }
       return res.status(200).json({ RspCode: '00', Message: 'Confirm Success' });
     }

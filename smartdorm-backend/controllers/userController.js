@@ -1,5 +1,9 @@
 const User = require("../models/User");
+require("../models/Room");
+require("../models/Area");
 const { ROLES } = require("../config/roles");
+const { formatUser } = require("./authController");
+const { notifyUser } = require("../utils/notifyUser");
 
 exports.getAll = async (req, res) => {
   try {
@@ -9,7 +13,7 @@ exports.getAll = async (req, res) => {
     if (isActive !== undefined) filter.isActive = isActive === "true";
     if (status) filter.status = status;
     const users = await User.find(filter).select("-password").populate("roomId", "name").populate("managedAreaId", "name");
-    res.json(users);
+    res.json(users.map(formatUser));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -19,7 +23,7 @@ exports.getById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password").populate("roomId", "name floor").populate("managedAreaId", "name address");
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+    res.json(formatUser(user));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -43,7 +47,8 @@ exports.create = async (req, res) => {
       isActive: true,
     });
     await user.save();
-    res.status(201).json({ id: user._id, email: user.email, fullName: user.fullName, role: user.role });
+    await notifyUser(user._id, "Tài khoản đã được tạo", "Tài khoản của bạn đã được quản trị viên tạo. Bạn có thể đăng nhập khi được cấp quyền.", "system");
+    res.status(201).json(formatUser(user));
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -51,12 +56,32 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
+    const oldUser = await User.findById(req.params.id).select("status role");
     const { password, ...rest } = req.body;
     const updateData = { ...rest };
     if (password) updateData.password = password;
     const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+    // Thông báo khi role hoặc status thay đổi (liên quan người thuê)
+    if (oldUser && (oldUser.status !== user.status || oldUser.role !== user.role)) {
+      let title = "Cập nhật tài khoản";
+      let content = "Thông tin tài khoản của bạn đã được quản trị viên cập nhật.";
+      if (user.status === "approved") {
+        title = "Đã được duyệt";
+        content = "Tài khoản của bạn đã được quản trị viên duyệt. Bạn có thể sử dụng đầy đủ chức năng.";
+      } else if (user.status === "rejected") {
+        title = "Đã bị từ chối";
+        content = "Tài khoản của bạn chưa được duyệt. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.";
+      } else if (user.role === ROLES.TENANT && oldUser.role !== ROLES.TENANT) {
+        title = "Đã được gán phòng";
+        content = "Bạn đã được chuyển thành người thuê và có thể được gán phòng. Kiểm tra thông tin trong tài khoản.";
+      } else if (user.role !== ROLES.TENANT && oldUser.role === ROLES.TENANT) {
+        title = "Đã trả phòng";
+        content = "Vai trò và phòng của bạn đã được cập nhật. Vui lòng liên hệ quản trị viên nếu có thắc mắc.";
+      }
+      await notifyUser(user._id, title, content, "system");
+    }
+    res.json(formatUser(user));
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -79,7 +104,8 @@ exports.assignTenant = async (req, res) => {
     const userDoc = await User.findById(userId);
     if (!userDoc) return res.status(404).json({ message: "User not found" });
 
-    if (userDoc.status !== "approved") {
+    const isApproved = !userDoc.status || userDoc.status === "approved";
+    if (!isApproved) {
       return res.status(400).json({ message: "Chỉ có thể gán phòng cho user đã được duyệt." });
     }
 
@@ -97,7 +123,13 @@ exports.assignTenant = async (req, res) => {
     ).select("-password");
     
     await Room.findByIdAndUpdate(roomId, { status: "occupied" });
-    res.json(user);
+    await notifyUser(
+      userId,
+      "Đã được gán phòng",
+      "Bạn đã được gán vào phòng. Vui lòng kiểm tra thông tin phòng trong tài khoản.",
+      "contract"
+    );
+    res.json(formatUser(user));
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -122,6 +154,12 @@ exports.unassignTenant = async (req, res) => {
     const Room = require("../models/Room");
     await Room.findByIdAndUpdate(roomId, { status: "available" });
 
+    await notifyUser(
+      userId,
+      "Đã trả phòng",
+      "Phòng của bạn đã được thu hồi. Vui lòng liên hệ quản trị viên nếu có thắc mắc.",
+      "system"
+    );
     res.json({ success: true, message: "Đã trả phòng và chuyển user về guest thành công" });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -136,7 +174,13 @@ exports.approve = async (req, res) => {
       { new: true }
     ).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+    await notifyUser(
+      user._id,
+      "Đã được duyệt",
+      "Tài khoản của bạn đã được quản trị viên duyệt. Bạn có thể sử dụng đầy đủ chức năng.",
+      "system"
+    );
+    res.json(formatUser(user));
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -150,7 +194,13 @@ exports.reject = async (req, res) => {
       { new: true }
     ).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+    await notifyUser(
+      user._id,
+      "Đã bị từ chối",
+      "Tài khoản của bạn chưa được duyệt. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.",
+      "system"
+    );
+    res.json(formatUser(user));
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -169,7 +219,7 @@ exports.updateProfile = async (req, res) => {
     const user = await User.findByIdAndUpdate(req.user._id, updateData, { new: true }).select("-password");
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
     
-    res.json({ success: true, message: "Cập nhật hồ sơ thành công", data: user });
+    res.json({ success: true, message: "Cập nhật hồ sơ thành công", data: formatUser(user) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

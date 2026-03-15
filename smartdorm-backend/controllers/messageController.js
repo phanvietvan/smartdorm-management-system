@@ -1,5 +1,6 @@
 const Message = require("../models/Message");
 const User = require("../models/User");
+const { notifyUser } = require("../utils/notifyUser");
 
 exports.getConversation = async (req, res) => {
   try {
@@ -30,6 +31,8 @@ exports.send = async (req, res) => {
     });
     await message.save();
     const populated = await Message.findById(message._id).populate("senderId", "fullName").populate("receiverId", "fullName");
+    const senderName = req.user && req.user.fullName ? req.user.fullName : "Ai đó";
+    await notifyUser(receiverId, "Tin nhắn mới", `${senderName} đã gửi tin nhắn cho bạn.`, "general");
     res.status(201).json(populated);
   } catch (err) {
     res.status(400).json({ message: err.message });

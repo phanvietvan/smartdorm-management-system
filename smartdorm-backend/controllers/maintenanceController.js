@@ -1,5 +1,7 @@
 const MaintenanceRequest = require("../models/MaintenanceRequest");
+const User = require("../models/User");
 const { ROLES } = require("../config/roles");
+const { notifyUser } = require("../utils/notifyUser");
 
 const filterByUser = (req) => {
   const filter = {};
@@ -56,6 +58,14 @@ exports.create = async (req, res) => {
     });
     await maintenance.save();
     const populated = await MaintenanceRequest.findById(maintenance._id).populate("roomId", "name").populate("tenantId", "fullName");
+    const tenantName = req.user.fullName || "Người thuê";
+    await notifyUser(req.user._id, "Yêu cầu sửa chữa đã gửi", `Yêu cầu "${title}" đã được ghi nhận. Chúng tôi sẽ xử lý sớm.`, "maintenance");
+    // Gửi thông báo cho admin/manager và landlord khi người dùng báo cáo sự cố → hiển thị trong chuông và trang Thông báo
+    const contentForAdmin = `${tenantName} báo cáo sự cố: "${title}"${description ? `. ${description}` : ""}`;
+    const admins = await User.find({ $or: [{ role: /^admin$/i }, { role: /^manager$/i }] }).select("_id").lean();
+    const landlords = await User.find({ role: /^landlord$/i }).select("_id").lean();
+    for (const u of admins) await notifyUser(u._id, "Báo cáo sự cố mới", contentForAdmin, "maintenance");
+    for (const u of landlords) await notifyUser(u._id, "Báo cáo sự cố mới", contentForAdmin, "maintenance");
     res.status(201).json(populated);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -77,6 +87,14 @@ exports.update = async (req, res) => {
       maintenance.assignedTo = req.user._id;
     }
     await maintenance.save();
+    const tenantId = maintenance.tenantId && maintenance.tenantId.toString ? maintenance.tenantId : maintenance.tenantId;
+    if (tenantId) {
+      if (maintenance.status === "in_progress") {
+        await notifyUser(tenantId, "Đang xử lý sửa chữa", `Yêu cầu "${maintenance.title}" đang được nhân viên xử lý.`, "maintenance");
+      } else if (maintenance.status === "completed" || maintenance.status === "closed") {
+        await notifyUser(tenantId, "Hoàn thành sửa chữa", `Yêu cầu "${maintenance.title}" đã hoàn thành. Bạn có thể xác nhận trong mục Sửa chữa.`, "maintenance");
+      }
+    }
     res.json(maintenance);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -91,6 +109,10 @@ exports.assign = async (req, res) => {
       { new: true }
     ).populate("assignedTo", "fullName");
     if (!maintenance) return res.status(404).json({ message: "Maintenance request not found" });
+    const tenantId = maintenance.tenantId && maintenance.tenantId.toString ? maintenance.tenantId : maintenance.tenantId;
+    if (tenantId) {
+      await notifyUser(tenantId, "Đã phân công sửa chữa", `Yêu cầu "${maintenance.title}" đã được phân công nhân viên xử lý.`, "maintenance");
+    }
     res.json(maintenance);
   } catch (err) {
     res.status(400).json({ message: err.message });

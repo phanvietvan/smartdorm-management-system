@@ -2,8 +2,29 @@ const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const { generateToken } = require("../middleware/auth");
 const { ROLES } = require("../config/roles");
+const { notifyUser } = require("../utils/notifyUser");
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const formatUser = (user) => {
+  if (!user) return null;
+  return {
+    id: user._id || user.id,
+    _id: user._id || user.id,
+    email: user.email,
+    fullName: user.fullName,
+    role: user.role,
+    status: user.status || "approved",
+    roomId: user.roomId,
+    managedAreaId: user.managedAreaId,
+    phone: user.phone,
+    avatarUrl: user.avatarUrl,
+    idCardNumber: user.idCardNumber,
+    address: user.address,
+  };
+};
+
+exports.formatUser = formatUser;
 
 exports.register = async (req, res) => {
   try {
@@ -28,7 +49,7 @@ exports.register = async (req, res) => {
     res.status(201).json({
       message: "Đăng ký thành công",
       token,
-      user: { id: user._id, email: user.email, fullName: user.fullName, role: user.role },
+      user: formatUser(user),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -46,7 +67,7 @@ exports.login = async (req, res) => {
     const token = generateToken(user);
     res.json({
       token,
-      user: { id: user._id, email: user.email, fullName: user.fullName, role: user.role },
+      user: formatUser(user),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -81,20 +102,18 @@ exports.googleLogin = async (req, res) => {
         role: ROLES.GUEST,
         status: "approved",
         isActive: true,
+        avatarUrl: picture,
       });
       await user.save();
+      const token = generateToken(user);
       return res.status(201).json({
-        message: "Đăng ký Google thành công, tài khoản đang chờ quản trị viên duyệt.",
-        user: {
-          id: user._id,
-          email: user.email,
-          fullName: user.fullName,
-          role: user.role,
-          status: user.status,
-        },
+        message: "Đăng ký thành công",
+        token,
+        user: formatUser(user),
       });
     } else if (!user.googleId) {
       user.googleId = googleId;
+      if (picture && !user.avatarUrl) user.avatarUrl = picture;
       await user.save({ validateBeforeSave: false });
     }
 
@@ -120,13 +139,7 @@ exports.googleLogin = async (req, res) => {
     const token = generateToken(user);
     res.json({
       token,
-      user: {
-        id: user._id,
-        email: user.email,
-        fullName: user.fullName,
-        role: user.role,
-        status: user.status,
-      },
+      user: formatUser(user),
     });
   } catch (err) {
     console.error("Google login error:", err);
@@ -139,14 +152,7 @@ exports.googleLogin = async (req, res) => {
 };
 
 exports.me = (req, res) => {
-  res.json({
-    id: req.user._id,
-    email: req.user.email,
-    fullName: req.user.fullName,
-    role: req.user.role,
-    roomId: req.user.roomId,
-    managedAreaId: req.user.managedAreaId,
-  });
+  res.json(formatUser(req.user));
 };
 
 exports.changePassword = async (req, res) => {
@@ -164,7 +170,7 @@ exports.changePassword = async (req, res) => {
 
     user.password = newPassword;
     await user.save();
-
+    await notifyUser(user._id, "Mật khẩu đã thay đổi", "Mật khẩu tài khoản của bạn đã được thay đổi thành công. Nếu không phải bạn, vui lòng liên hệ quản trị.", "system");
     res.json({ success: true, message: "Đổi mật khẩu thành công" });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -195,7 +201,7 @@ exports.resetPassword = async (req, res) => {
     
     user.password = newPassword;
     await user.save();
-    
+    await notifyUser(user._id, "Mật khẩu đã đặt lại", "Mật khẩu tài khoản của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới.", "system");
     res.json({ success: true, message: "Đặt lại mật khẩu thành công" });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
