@@ -36,8 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!saved) return true
     try {
       const u = JSON.parse(saved)
-      // If user is pending or rejected in cache, we MUST wait for background verification
-      // to see if they've been approved since last session.
       if (u.status !== 'approved') return true
     } catch {
       return true
@@ -48,12 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
-      // If we don't have a user or user is not approved, we definitely show loading
       const needsLoading = !user || user.status !== 'approved'
       if (needsLoading) setLoading(true)
-      
       authApi.me()
-        .then((r) => { 
+        .then((r: { data: User }) => {
           setUser(r.data)
           localStorage.setItem('user', JSON.stringify(r.data))
         })
@@ -68,6 +64,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Sync user back to localStorage for persistence of updates (like roomId)
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user))
+    }
+  }, [user])
+
   const login = async (email: string, password: string) => {
     const { data } = await authApi.login(email, password)
     localStorage.setItem('token', data.token)
@@ -79,16 +82,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.googleLogin(credential)
 
-      // 200 + token => approved, lưu token & user
-      if (response.status === 200) {
+      // 200 or 201 + token => approved, lưu token & user
+      if (response.status === 200 || response.status === 201) {
         const data = response.data as { token: string; user: User }
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        setUser(data.user)
-        return { state: 'approved' }
+        if (data.token) {
+          localStorage.setItem('token', data.token)
+          localStorage.setItem('user', JSON.stringify(data.user))
+          setUser(data.user)
+          return { state: 'approved' }
+        }
       }
 
-      // 201 => tạo mới, chờ duyệt
+      // Nếu 201 mà không có token thì mới coi là pending
       if (response.status === 201) {
         const message = (response.data as { message?: string })?.message
         return { state: 'pending', message }

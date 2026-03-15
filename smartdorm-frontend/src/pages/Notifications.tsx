@@ -28,7 +28,6 @@ export default function Notifications() {
     try {
       setLoading(true)
       setError('')
-      // Lấy tất cả lịch sử thông báo từ DB (không lọc isRead), limit để tránh quá tải
       const res = await notificationsApi.getAll({ limit: 100 })
       const list = Array.isArray(res.data) ? res.data : []
       setNotifications(list)

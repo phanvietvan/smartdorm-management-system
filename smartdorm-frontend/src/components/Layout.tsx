@@ -89,7 +89,7 @@ export default function Layout() {
   }, [])
 
   const isAdmin = user && adminRoles.includes(user.role)
-  const isPendingTenant = user && ['tenant', 'guest'].includes(user.role) && user.status !== 'approved'
+  const isPendingTenant = user && ['tenant', 'guest'].includes(user.role) && ['pending', 'rejected'].includes(user.status)
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -120,44 +120,35 @@ export default function Layout() {
     setIsLangMenuOpen(false)
   }
 
-  const loadNotifications = () => {
-    if (user && user.status === 'approved') {
-      // Lấy tất cả thông báo (giữ nguyên mãi, không chỉ unread) để danh sách không bao giờ biến mất
-      notificationsApi.getAll({ limit: 100 })
-        .then(res => setNotifications(res.data || []))
-        .catch(() => { })
-    }
+  const fetchNotifications = () => {
+    if (!user || user.status !== 'approved') return
+    notificationsApi.getAll({ isRead: false })
+      .then(res => setNotifications(Array.isArray(res.data) ? res.data : []))
+      .catch(() => {})
   }
 
-  // Load unread notifications khi vào layout và khi user đổi
   useEffect(() => {
-    loadNotifications()
+    fetchNotifications()
   }, [user])
 
-  // Refetch ngay mỗi khi chuyển trang (để thông báo hiện liền sau khi tạo hóa đơn, gán phòng, v.v.)
   useEffect(() => {
-    if (user && user.status === 'approved') loadNotifications()
-  }, [location.pathname, user])
-
-  // Refetch khi focus lại tab
-  useEffect(() => {
-    const onFocus = () => loadNotifications()
+    if (!user || user.status !== 'approved') return
+    const onFocus = () => fetchNotifications()
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [user])
 
-  // Cho phép trang khác (Bills, Users, ...) gọi làm mới chuông sau khi tạo/sửa
-  useEffect(() => {
-    const onRefetch = () => loadNotifications()
-    window.addEventListener('refetch-notifications', onRefetch)
-    return () => window.removeEventListener('refetch-notifications', onRefetch)
-  }, [user])
-
-  // Polling mỗi 5s để chuông cập nhật gần như ngay (thông báo hiện liền)
   useEffect(() => {
     if (!user || user.status !== 'approved') return
-    const interval = setInterval(loadNotifications, 5000)
+    const interval = setInterval(fetchNotifications, 45000)
     return () => clearInterval(interval)
+  }, [user])
+
+  // Cho phép trang khác (Bills, Users, ...) gọi làm mới chuông sau khi tạo/sửa
+  useEffect(() => {
+    const onRefetch = () => fetchNotifications()
+    window.addEventListener('refetch-notifications', onRefetch)
+    return () => window.removeEventListener('refetch-notifications', onRefetch)
   }, [user])
 
   const handleMarkRead = async (id: string, e?: React.MouseEvent) => {

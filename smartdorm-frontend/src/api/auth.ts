@@ -4,6 +4,7 @@ export type UserStatus = 'pending' | 'approved' | 'rejected'
 
 export type User = {
   id: string
+  _id: string
   email: string
   fullName: string
   role: string

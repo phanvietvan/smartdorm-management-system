@@ -46,7 +46,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function RequireApproved({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
 
-  if (user && ['tenant', 'guest'].includes(user.role) && user.status !== 'approved') {
+  if (user && ['tenant', 'guest'].includes(user.role) && ['pending', 'rejected'].includes(user.status)) {
     return (
       <div className="content">
         <div className="alert alert-error">

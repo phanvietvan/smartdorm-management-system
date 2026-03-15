@@ -22,8 +22,14 @@ function parseNotificationList(res: any): Notification[] {
   return []
 }
 
+export type CreateNotificationPayload = {
+  userId: string
+  title: string
+  content: string
+  type?: 'system' | 'bill' | 'maintenance' | 'contract' | 'general'
+}
+
 export const notificationsApi = {
-  /** Lấy thông báo: không truyền isRead = lấy tất cả từ DB; isRead=false = chỉ chưa đọc. */
   getAll: async (params?: { isRead?: boolean; limit?: number }) => {
     const query: Record<string, string | number | boolean> = {}
     if (params?.isRead !== undefined) {
@@ -34,10 +40,11 @@ export const notificationsApi = {
     const res = await api.get('/notifications', { params: query })
     return { ...res, data: parseNotificationList(res) }
   },
+  create: (data: CreateNotificationPayload) =>
+    api.post<Notification>('/notifications', data),
   markRead: (id: string) => api.put(`/notifications/${id}/read`),
   broadcast: (data: { title: string; content: string; type?: string; targetRole?: string; roomId?: string }) =>
     api.post<Notification>('/notifications/broadcast', data),
-  /** Tạo thông báo cho một user (khi admin duyệt, gán phòng, đổi role...) */
   createForUser: (data: { userId: string; title: string; content: string; type?: Notification['type'] }) =>
     api.post<Notification>('/notifications', data),
 }

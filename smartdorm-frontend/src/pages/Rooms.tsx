@@ -23,6 +23,9 @@ export default function Rooms() {
   const isTenant = user?.role === 'tenant'
   const canCreate = user ? ROOM_CREATOR_ROLES.includes(user.role) : false
 
+  // Flexible Room ID extraction
+  const myRoomId = typeof user?.roomId === 'object' ? user?.roomId?._id : user?.roomId
+
   const [rooms, setRooms] = useState<Room[]>([])
   const [areas, setAreas] = useState<Area[]>([])
   const [tenants, setTenants] = useState<User[]>([])
@@ -57,19 +60,15 @@ export default function Rooms() {
     const fetchData = async () => {
       try {
         if (isTenant) {
-          // Fetch room based on tenant's token (most reliable)
           try {
             const roomRes = await roomsApi.getMyRoom()
-            console.log('My room fetch result:', roomRes.data)
             setRooms([roomRes.data])
           } catch (fetchErr) {
-            console.error('Failed to fetch my room:', fetchErr)
             setRooms([])
           }
           setAreas([])
           setTenants([])
         } else if (isGuest) {
-          // If guest, fetch available rooms
           const [roomsRes, areasRes] = await Promise.all([
             roomsApi.getAvailable(),
             areasApi.getAll()
@@ -78,7 +77,6 @@ export default function Rooms() {
           setAreas(areasRes.data)
           setTenants([])
         } else {
-          // Admin/Manager/Landlord
           const [roomsRes, areasRes, usersRes] = await Promise.all([
             roomsApi.getAll(),
             areasApi.getAll(),
@@ -87,7 +85,6 @@ export default function Rooms() {
           setRooms(roomsRes.data)
           setAreas(areasRes.data)
           setTenants(usersRes.data)
-
           if (!form.areaId && areasRes.data.length) {
             setForm((prev) => ({ ...prev, areaId: areasRes.data[0]._id }))
           }

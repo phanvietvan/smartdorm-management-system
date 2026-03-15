@@ -4,11 +4,13 @@ export type UserStatus = 'pending' | 'approved' | 'rejected'
 
 export type User = {
   _id: string
+  id: string
   email: string
   fullName: string
   phone?: string
   role: string
-  roomId?: string
+  status: UserStatus
+  roomId?: string | any
   managedAreaId?: string
   avatarUrl?: string
   idCardNumber?: string
