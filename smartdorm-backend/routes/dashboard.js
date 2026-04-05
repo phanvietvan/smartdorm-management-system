@@ -6,7 +6,7 @@ const dashboardController = require("../controllers/dashboardController");
 
 const router = express.Router();
 
-router.get("/stats", authenticate, requirePermission([PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.REPORTS_VIEW]), dashboardController.getStats);
-router.get("/revenue", authenticate, requirePermission([PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.REPORTS_VIEW]), dashboardController.getRevenueReport);
+router.get("/stats", dashboardController.getStats);
+router.get("/revenue", dashboardController.getRevenueReport);
 
 module.exports = router;

@@ -1,8 +1,9 @@
 import type { Config } from "tailwindcss";
+import tailwindAnimate from "tailwindcss-animate";
 
 export default {
-  darkMode: ["class"],
-  content: ["./client/**/*.{ts,tsx}"],
+  darkMode: "class",
+  content: ["./client/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
     container: {
@@ -21,12 +22,35 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        background: "#f8fafc",
+        foreground: "#0f172a",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#4f46e5",
+          foreground: "#ffffff",
+          dim: "#4338ca",
+          container: "#e0e7ff",
         },
+        tertiary: {
+          DEFAULT: "#0ea5e9",
+          foreground: "#ffffff",
+        },
+        error: {
+          DEFAULT: "#ef4444",
+          foreground: "#ffffff",
+        },
+        surface: {
+          DEFAULT: "#f8fafc",
+          container: {
+            lowest: "#ffffff",
+            low: "#f1f5f9",
+            high: "#e2e8f0",
+            highest: "#cbd5e1",
+          },
+        },
+        "on-surface": "#0f172a",
+        "on-surface-variant": "#475569",
+        "on-primary": "#ffffff",
+        "inverse-surface": "#1e293b",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -78,5 +102,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindAnimate],
 } satisfies Config;

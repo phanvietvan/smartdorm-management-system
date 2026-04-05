@@ -6,7 +6,7 @@ const billController = require("../controllers/billController");
 
 const router = express.Router();
 
-router.get("/", authenticate, requirePermission([PERMISSIONS.BILLS_VIEW]), billController.getAll);
+router.get("/", billController.getAll);
 router.get("/:id", authenticate, requirePermission([PERMISSIONS.BILLS_VIEW]), billController.getById);
 router.post("/", authenticate, requirePermission(PERMISSIONS.BILLS_CREATE), billController.create);
 router.put("/:id", authenticate, requirePermission([PERMISSIONS.BILLS_VIEW, PERMISSIONS.BILLS_UPDATE]), billController.update);

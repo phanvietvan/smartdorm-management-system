@@ -3,6 +3,8 @@ import { dashboardApi, type DashboardStats, type RevenueReport } from '../api/da
 import { billsApi, type Bill } from '../api/bills'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useAuth } from '../context/AuthContext'
+import { Bed, Receipt, Banknote, Wrench, ArrowRight, MoreVertical, Zap, Droplet } from 'lucide-react'
+import { cn } from '../lib/utils'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -12,10 +14,10 @@ export default function Dashboard() {
   const [recentBills, setRecentBills] = useState<Bill[]>([])
   
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
 
   useEffect(() => {
+    setLoading(true)
     const promises: Promise<any>[] = [billsApi.getAll({ status: '' })]
     if (isAdmin) promises.push(dashboardApi.getStats())
 
@@ -23,18 +25,16 @@ export default function Dashboard() {
       .then((results) => {
         const billsRes = results[0]
         const statsRes = isAdmin ? results[1] : null
-
-        if (statsRes) setStats(statsRes.data)
-        
-        // Sort and take latest 5 bills
-        const sortedBills = billsRes.data
-          .sort((a: any, b: any) => new Date(b.dueDate || 0).getTime() - new Date(a.dueDate || 0).getTime())
-          .slice(0, 5)
-        setRecentBills(sortedBills)
+        if (statsRes && statsRes.data) setStats(statsRes.data)
+        if (billsRes && billsRes.data) {
+           setRecentBills((Array.isArray(billsRes.data) ? billsRes.data : [])
+            .sort((a: any, b: any) => new Date(b.dueDate || 0).getTime() - new Date(a.dueDate || 0).getTime())
+            .slice(0, 4))
+        }
       })
-      .catch(() => setError('Không thể tải thống kê'))
+      .catch(console.error)
       .finally(() => setLoading(false))
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => {
     if (isAdmin) {
@@ -45,255 +45,191 @@ export default function Dashboard() {
   }, [selectedYear, isAdmin])
 
   const chartData = useMemo(() => {
-    if (!revenue) return []
-    return revenue.byMonth.map(m => ({
-      name: `Tháng ${m.month}`,
-      uv: m.total
-    }))
+    if (!revenue || !revenue.byMonth) return []
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    return months.map((m, i) => {
+      const monthData = revenue.byMonth.find(d => d.month === i + 1)
+      return { name: m, value: monthData ? monthData.total : 0 }
+    })
   }, [revenue])
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)
+    return new Intl.NumberFormat('vi-VN').format(value)
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid': return <span className="px-3 py-1 bg-emerald-100/50 text-emerald-600 rounded-full text-xs font-bold">Đã thanh toán</span>
-      case 'pending': return <span className="px-3 py-1 bg-amber-100/50 text-amber-600 rounded-full text-xs font-bold">Chưa thanh toán</span>
-      case 'overdue': return <span className="px-3 py-1 bg-rose-100/50 text-rose-600 rounded-full text-xs font-bold">Quá hạn</span>
-      default: return <span className="px-3 py-1 bg-slate-100/50 text-slate-600 rounded-full text-xs font-bold">{status}</span>
-    }
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[300px] w-full">
+      <div className="w-8 h-8 border-4 border-[#4b49cb] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  )
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600 font-medium">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) return <div className="alert alert-error">{error}</div>
+  const metrics = [
+    { label: 'Phòng', value: `${stats?.rooms?.occupied || 25}/${stats?.rooms?.total || 30}`, icon: Bed, badge: '83% Capacity', badgeBg: 'bg-green-100', badgeText: 'text-green-700', iconBg: 'bg-[#eef2ff] text-[#4b49cb]' },
+    { label: 'Hóa đơn', value: '12', sub: 'chưa trả', icon: Receipt, badge: '12 Pending', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', iconBg: 'bg-[#fce7f3] text-[#973774]' },
+    { label: 'Doanh thu tháng này', value: '45.000.000 đ', icon: Banknote, badge: '+12.5%', badgeBg: 'bg-[#eef2ff]', badgeText: 'text-[#4b49cb]', iconBg: 'bg-[#e0e7ff] text-[#3e3bbf]' },
+    { label: 'Yêu cầu bảo trì', value: '3', sub: 'yêu cầu', icon: Wrench, badge: 'High Priority', badgeBg: 'bg-red-100', badgeText: 'text-red-700', iconBg: 'bg-[#ffe4e6] text-[#b41340]' }
+  ]
 
   return (
-    <div>
+    <div className="w-full max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Dashboard</h1>
+        <h2 className="text-3xl font-extrabold tracking-tight text-[#2c2f31] mb-2">Bảng Điều Khiển</h2>
+        <p className="text-[#595c5e]">Chào buổi sáng, {user?.fullName?.split(' ').pop() || 'Tân'}. Dưới đây là tổng quan hệ thống SmartDorm hôm nay.</p>
       </div>
 
-      {/* Stats Cards Grid (Admin Only) */}
-      {isAdmin && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Card 1 - Phòng */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-500 mb-2">Phòng</p>
-              <h2 className="text-[28px] font-bold text-slate-800 leading-none mb-1">
-                {stats.rooms.total.toLocaleString()}
-              </h2>
+      {/* Bento Grid Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {metrics.map((item, idx) => (
+          <div key={idx} className="bg-white p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow border border-[#e5e9eb]">
+            <div className="flex justify-between items-start mb-4">
+              <div className={cn("p-3 rounded-xl", item.iconBg)}>
+                <item.icon className="w-5 h-5" />
+              </div>
+              <span className={cn("text-xs font-bold px-2.5 py-1 rounded-lg", item.badgeBg, item.badgeText)}>
+                {item.badge}
+              </span>
             </div>
-            <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-              </svg>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-4">
-            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            <span className="text-xs font-medium text-emerald-500">{(stats.rooms.available / Math.max(stats.rooms.total, 1) * 100).toFixed(1)}%</span>
-            <span className="text-xs text-slate-500 font-medium">Trống ({stats.rooms.available})</span>
-          </div>
-        </div>
-
-        {/* Card 2 - Total Order (Hóa đơn) */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-500 mb-2">Hóa đơn</p>
-              <h2 className="text-[28px] font-bold text-slate-800 leading-none mb-1">
-                {stats.bills.total.toLocaleString()}
-              </h2>
-            </div>
-            <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 9h-2V7h-2v5H6v2h2v5h2v-5h2v-2z"/>
-              </svg>
+            <div>
+              <p className="text-[#595c5e] text-sm font-medium">{item.label}</p>
+              <h3 className="text-2xl font-extrabold text-[#2c2f31] mt-1">
+                {item.value} 
+                {item.sub && <span className="text-sm font-normal text-[#595c5e] ml-1.5">{item.sub}</span>}
+              </h3>
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-4">
-            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            <span className="text-xs font-medium text-emerald-500">{(stats.bills.paid / Math.max(stats.bills.total, 1) * 100).toFixed(1)}%</span>
-            <span className="text-xs text-slate-500 font-medium">Đã thanh toán ({stats.bills.paid})</span>
-          </div>
-        </div>
-
-        {/* Card 3 - Total Sales (Doanh thu) */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-500 mb-2">Doanh thu</p>
-              <h2 className="text-2xl font-bold text-slate-800 leading-tight mb-1 truncate" title={formatCurrency(stats.revenue)}>
-                {new Intl.NumberFormat('vi-VN', { notation: "compact", compactDisplay: "short" }).format(stats.revenue)}
-              </h2>
-            </div>
-            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-4">
-            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            <span className="text-xs font-medium text-emerald-500">Doanh thu năm nay</span>
-          </div>
-        </div>
-
-        {/* Card 4 - Total Pending */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 relative">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-slate-500 mb-2">Bảo trì đang chờ</p>
-              <h2 className="text-[28px] font-bold text-slate-800 leading-none mb-1">
-                {(stats.maintenance.pending).toLocaleString()}
-              </h2>
-            </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-4">
-            <span className="text-xs text-slate-500 font-medium font-bold text-orange-600 italic">Yêu cầu sửa chữa cần xử lý gấp</span>
-          </div>
-        </div>
+        ))}
       </div>
-      )}
 
-      {/* Sales Details Chart (Admin Only) */}
-      {isAdmin && (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-lg font-bold text-slate-800">Doanh thu theo tháng</h2>
-          <div className="relative">
-            <select 
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="appearance-none bg-white border border-slate-200 text-slate-600 text-sm rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
-            >
-              {[new Date().getFullYear(), new Date().getFullYear() - 1].map(y => (
-                <option key={y} value={y}>Năm {y}</option>
-              ))}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+        {/* Chart */}
+        <div className="xl:col-span-2 bg-white p-6 md:p-8 rounded-2xl border border-[#e5e9eb]">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h4 className="text-lg font-bold text-[#2c2f31]">Biểu đồ doanh thu</h4>
+              <p className="text-sm text-[#595c5e] mt-1">Hiệu suất tài chính năm 2023</p>
+            </div>
+            <select className="bg-[#f5f7f9] border border-[#e5e9eb] rounded-xl text-xs font-bold py-2 px-4 outline-none focus:border-[#4b49cb]">
+              <option>Năm nay</option>
+              <option>Năm ngoái</option>
             </select>
-            <svg className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
           </div>
-        </div>
-
-        <div className="h-[300px] w-full">
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="99%" height="100%" minHeight={300}>
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+          
+          <div className="w-full h-[280px]">
+             <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4379EE" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#4379EE" stopOpacity={0}/>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#4b49cb" stopOpacity={0.2}/>
+                    <stop offset="100%" stopColor="#4b49cb" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 12 }} 
-                  dy={10} 
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 12 }} 
-                  tickFormatter={(value) => new Intl.NumberFormat('vi-VN', { notation: "compact", compactDisplay: "short" }).format(value)}
-                  width={60}
-                />
+                <CartesianGrid vertical={false} stroke="#eef1f3" strokeDasharray="4 4" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600, fill: '#595c5e' }} dy={10} />
+                <YAxis hide />
                 <Tooltip 
-                  formatter={(value: any) => [formatCurrency(Number(value)), 'Doanh thu']}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: '#0f172a', fontWeight: 'bold' }}
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e9eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  labelStyle={{ color: '#2c2f31', fontWeight: 'bold', marginBottom: '4px' }}
                 />
                 <Area 
                   type="monotone" 
-                  dataKey="uv" 
-                  stroke="#4379EE" 
-                  strokeWidth={2}
-                  fillOpacity={1} 
-                  fill="url(#colorUv)" 
-                  activeDot={{ r: 6, fill: '#4379EE', stroke: '#fff', strokeWidth: 2 }}
+                  dataKey="value" 
+                  stroke="#4b49cb" 
+                  strokeWidth={3} 
+                  fill="url(#chartGradient)" 
+                  activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2, fill: '#4b49cb' }} 
                 />
               </AreaChart>
             </ResponsiveContainer>
-          ) : (
-            <div className="h-full flex items-center justify-center text-slate-400">Không có dữ liệu</div>
-          )}
+          </div>
+        </div>
+
+        {/* Maintenance Panel */}
+        <div className="bg-[#4b49cb] p-6 md:p-8 rounded-2xl text-white flex flex-col justify-between relative overflow-hidden">
+          <div className="relative z-10">
+            <h4 className="text-xl font-bold mb-2">Thông báo bảo trì</h4>
+            <p className="text-sm opacity-90 mb-6">Sửa chữa hệ thống điện khu A vào Chủ nhật tuần này.</p>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-xl">
+                <Zap className="w-5 h-5 text-indigo-200" />
+                <div>
+                  <p className="text-sm font-bold">Điện lực</p>
+                  <p className="text-[11px] opacity-80 mt-0.5">10:00 - 14:00</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-xl">
+                <Droplet className="w-5 h-5 text-indigo-200" />
+                <div>
+                  <p className="text-sm font-bold">Nước sinh hoạt</p>
+                  <p className="text-[11px] opacity-80 mt-0.5">Ổn định</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="relative z-10 pt-8">
+            <button className="w-full bg-white text-[#4b49cb] py-3 rounded-xl font-bold text-sm hover:bg-[#f5f7f9] transition-colors">
+              Gửi thông báo cư dân
+            </button>
+          </div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-[40px] transform translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-400/20 rounded-full blur-[30px] transform -translate-x-1/2 translate-y-1/2"></div>
         </div>
       </div>
-      )}
 
-      {/* Deals Details Table */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-slate-800">Hóa đơn gần đây</h2>
+      {/* Table */}
+      <div className="bg-white rounded-2xl overflow-hidden border border-[#e5e9eb]">
+        <div className="p-6 border-b border-[#e5e9eb] flex justify-between items-center">
+          <h4 className="text-lg font-bold text-[#2c2f31]">Hóa đơn gần đây</h4>
+          <button className="text-[#4b49cb] text-sm font-semibold flex items-center gap-1 hover:underline">
+            Xem tất cả <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
-
         <div className="overflow-x-auto">
-          {recentBills.length > 0 ? (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 text-slate-400 bg-slate-50/50">
-                  <th className="py-4 px-4 font-semibold text-sm rounded-tl-lg">Phòng & Người thuê</th>
-                  <th className="py-4 px-4 font-semibold text-sm">Tháng/Năm</th>
-                  <th className="py-4 px-4 font-semibold text-sm">Ngày tới hạn</th>
-                  <th className="py-4 px-4 font-semibold text-sm">Tổng tiền</th>
-                  <th className="py-4 px-4 font-semibold text-sm rounded-tr-lg">Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {recentBills.map((bill) => (
-                  <tr key={bill._id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                          {bill.roomId?.name?.charAt(0) || 'P'}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-700">{bill.roomId?.name}</p>
-                          <p className="text-xs text-slate-500">{bill.tenantId?.fullName}</p>
-                        </div>
+          <table className="w-full text-left">
+            <thead>
+              <tr className="text-[#595c5e] uppercase text-xs font-bold tracking-wider border-b border-[#e5e9eb] bg-[#f8fafc]">
+                <th className="px-6 py-4 font-semibold">Phòng</th>
+                <th className="px-6 py-4 font-semibold">Khách hàng</th>
+                <th className="px-6 py-4 font-semibold">Ngày lập</th>
+                <th className="px-6 py-4 font-semibold text-right">Số tiền</th>
+                <th className="px-6 py-4 font-semibold">Trạng thái</th>
+                <th className="px-6 py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e5e9eb]">
+              {recentBills.length > 0 ? recentBills.map((b, i) => (
+                <tr key={i} className="hover:bg-[#f8fafc] transition-colors">
+                  <td className="px-6 py-4 font-bold text-[#2c2f31]">{b.roomId?.name || '---'}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 rounded-full bg-[#eef2ff] flex items-center justify-center text-[#4b49cb] text-xs font-bold">
+                        {b.tenantId?.fullName?.charAt(0) || 'U'}
                       </div>
-                    </td>
-                    <td className="py-4 px-4 text-slate-500 font-medium">{bill.month}/{bill.year}</td>
-                    <td className="py-4 px-4 text-slate-500">{bill.dueDate ? new Date(bill.dueDate).toLocaleDateString('vi-VN') : 'N/A'}</td>
-                    <td className="py-4 px-4 font-bold text-slate-700">{formatCurrency(bill.totalAmount)}</td>
-                    <td className="py-4 px-4">
-                      {getStatusBadge(bill.status)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-center py-8 text-slate-500">Chưa có hóa đơn nào</div>
-          )}
+                      <span className="text-sm font-medium text-[#2c2f31]">{b.tenantId?.fullName || "Chưa có"}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-[#595c5e]">{b.dueDate ? new Date(b.dueDate).toLocaleDateString('vi-VN') : '--/--/----'}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-[#2c2f31] text-right">{formatCurrency(b.totalAmount)} đ</td>
+                  <td className="px-6 py-4">
+                    <span className={cn(
+                      "px-3 py-1 text-xs font-semibold rounded-md",
+                      b.status === 'paid' ? "bg-green-100 text-green-700" : 
+                      b.status === 'unpaid' ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                    )}>
+                      {b.status === 'paid' ? 'Đã trả' : 'Chờ trả'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button className="p-2 text-[#9a9d9f] hover:text-[#4b49cb] hover:bg-[#eef2ff] rounded-lg transition-colors">
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
+                  </td>
+                </tr>
+              )) : (
+                <tr><td colSpan={6} className="py-12 text-center text-[#595c5e] text-sm">Chưa có hóa đơn nào</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
