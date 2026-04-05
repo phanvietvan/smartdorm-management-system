@@ -19,6 +19,7 @@ export default function Layout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [showNotifications, setShowNotifications] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -93,10 +94,90 @@ export default function Layout() {
             <button className="px-3 py-1 rounded text-xs font-bold text-[#595c5e] hover:bg-slate-200 transition-colors">EN</button>
           </div>
 
-          <div className="flex items-center gap-4 border-l border-[#d9dde0] pl-6">
-            <div className="relative cursor-pointer hover:bg-slate-100 p-2 rounded-full transition-colors">
-              <Bell className="text-[#595c5e] w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#b41340] rounded-full border border-white"></span>
+          <div className="flex items-center gap-4 border-l border-[#d9dde0] pl-6 h-10">
+            <div className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className={cn(
+                  "relative p-2.5 rounded-full transition-all duration-300",
+                  showNotifications ? "bg-[#eef2ff] text-[#4b49cb] shadow-sm" : "hover:bg-slate-100 text-[#595c5e]"
+                )}
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-[#b41340] rounded-full border-2 border-white animate-pulse"></span>
+              </button>
+
+              {/* Notification Fly-out */}
+              <div className={cn(
+                "absolute right-0 mt-3 w-96 bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-[#eef1f3] overflow-hidden z-50 transition-all duration-300 origin-top-right",
+                showNotifications ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+              )}>
+                <div className="p-5 border-b border-[#eef1f3] flex justify-between items-center bg-[#f8fafc]/50">
+                  <h3 className="font-bold text-[#2c2f31]">Thông báo</h3>
+                  <button className="text-xs font-bold text-[#4b49cb] hover:underline">Đánh dấu tất cả đã đọc</button>
+                </div>
+                
+                <div className="max-h-[400px] overflow-y-auto">
+                  {/* Notification Item: Unread */}
+                  <div className="relative p-5 cursor-pointer hover:bg-[#f8fafc] transition-colors border-b border-[#f1f4f6]">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#4b49cb]"></div>
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-full bg-[#eef2ff] flex items-center justify-center text-[#4b49cb] flex-shrink-0">
+                        <Bell className="w-5 h-5 text-[#4b49cb]" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-sm font-bold text-[#2c2f31]">Tín hiệu mới từ Tokyo Core</p>
+                        <p className="text-xs text-[#595c5e] leading-relaxed">Nhóm biên tập đã đánh dấu sự thay đổi tần suất ưu tiên trong khu vực 7-B.</p>
+                        <span className="text-[10px] font-bold text-[#9a9d9f] mt-2 uppercase tracking-wider">2 phút trước</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notification Item: System */}
+                  <div className="p-5 cursor-pointer hover:bg-[#f8fafc] transition-colors border-b border-[#f1f4f6]">
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0">
+                         <Settings className="w-5 h-5" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-sm font-bold text-[#2c2f31]">Hệ thống đã cập nhật</p>
+                        <p className="text-xs text-[#595c5e] leading-relaxed">SmartDorm Engine v4.2.0 đã được triển khai. Các công cụ lưu trữ mới đã sẵn sàng.</p>
+                        <span className="text-[10px] font-bold text-[#9a9d9f] mt-2 uppercase tracking-wider">1 giờ trước</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notification Item: Team */}
+                  <div className="p-5 cursor-pointer hover:bg-[#f8fafc] transition-colors border-b border-[#f1f4f6]">
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-[#eef1f3]">
+                        <img 
+                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKS59wqqdrz0byrKGWw5K3aeFgmmJatWktKVEO_78StBa2YgAMCOoqCRhBQo-NCWUsg90C9D7drLid090kYDd5ga_vQoz4IOCvKBuJgpYWzzmpCb0cex5NENGQ7FcvonUNvxKRBdunVBFStbM-IDjNh2y5LnscALizuHXu4KagHR4CjvBEBBjIf3G-3pimz75hqaRY5FMUIA-TTzFyr3lJWZVDRkYjQv1Cok1BRTVc7EY_GIeL-u4GRAibBlRWa2b_vGlhf_OoAmVo" 
+                          alt="Elena"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-sm font-bold text-[#2c2f31]">Elena đã nhắc đến bạn</p>
+                        <p className="text-xs text-[#595c5e] leading-relaxed">Elena đã đánh dấu mục biên tập mới của bạn là 'Sẵn sàng xét duyệt'.</p>
+                        <span className="text-[10px] font-bold text-[#9a9d9f] mt-2 uppercase tracking-wider">3 giờ trước</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-[#f8fafc] text-center border-t border-[#eef1f3]">
+                   <button 
+                    onClick={() => {
+                        setShowNotifications(false);
+                        navigate('/app/notifications');
+                    }}
+                    className="w-full py-2.5 bg-[#4b49cb] text-white rounded-xl font-bold text-sm hover:bg-[#3e3bbf] transition-colors shadow-sm"
+                   >
+                    Xem tất cả thông báo
+                  </button>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-1.5 rounded-lg transition-colors">

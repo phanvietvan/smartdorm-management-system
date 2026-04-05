@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import Lottie from "lottie-react";
-import animationData from "./Home.json";
+import homeAnimation from "./Home.json";
 import materialWaveLoading from "../assets/MaterialWaveLoading.json";
 import { useAuth } from "../context/AuthContext";
+import { Mail, Lock, ArrowRight, Github } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -47,161 +48,167 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex font-poppins bg-[#fafafa] selection:bg-blue-100 overflow-hidden">
-      {/* Left Panel: Clean Form Section */}
-      <div className="w-full lg:w-[48%] flex flex-col justify-center items-center px-6 sm:px-12 lg:px-20 py-12 relative z-10 bg-white shadow-[20px_0_50px_rgba(0,0,0,0.02)]">
-        <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-left-8 duration-1000">
-
-          {/* Header Section */}
-          <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-[#1e293b] text-4xl lg:text-[42px] font-bold leading-[1.1] mb-1">
-              Hey,
-            </h2>
-            <h2 className="text-[#1e293b] text-4xl lg:text-[42px] font-bold leading-[1.1] mb-5">
-              Welcome to
-            </h2>
-            <h1 className="text-black text-5xl lg:text-6xl font-black tracking-tight mb-6">
-              SmartDorm!
+    <div className="min-h-screen bg-[#f8fafb] text-[#191c1d] font-manrope selection:bg-indigo-100 flex flex-col relative overflow-hidden"
+         style={{
+           backgroundImage: `
+             radial-gradient(at 0% 0%, hsla(253,16%,7%,0.03) 0, transparent 50%), 
+             radial-gradient(at 50% 0%, hsla(350,100%,92%,0.6) 0, transparent 60%), 
+             radial-gradient(at 100% 0%, hsla(225,39%,30%,0.03) 0, transparent 50%), 
+             radial-gradient(at 0% 100%, hsla(190,100%,93%,0.5) 0, transparent 60%), 
+             radial-gradient(at 50% 100%, hsla(45,100%,90%,0.5) 0, transparent 60%), 
+             radial-gradient(at 100% 100%, hsla(30,100%,88%,0.5) 0, transparent 60%)
+           `
+         }}>
+      
+      <main className="flex-grow flex items-center justify-center px-6 py-12 relative z-10">
+        <div className="w-full max-w-[480px]">
+          
+          {/* Brand Anchor */}
+          <div className="mb-0 text-center animate-in fade-in slide-in-from-top-8 duration-700">
+            <div className="flex justify-center mb-0">
+               <div className="w-28 h-28 drop-shadow-2xl">
+                  <Lottie animationData={homeAnimation} loop={true} />
+               </div>
+            </div>
+            <h1 className="text-4xl font-black tracking-[-0.04em] text-[#1e293b] mb-1 leading-none">
+              SMARTDORM
             </h1>
-            <p className="text-[#64748b] text-[17px] font-medium opacity-80">
-              We are very happy to see you back!
+            <p className="text-[#595c5e] text-[10px] tracking-[0.3em] font-black uppercase opacity-70">
+              Modern Housing Management
             </p>
           </div>
 
-          {error && (
-            <div className="mb-8 p-4 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-sm font-bold flex items-center gap-3 animate-shake">
-              <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Field */}
-            <div className="space-y-1">
-              <label className="text-[#1e293b] font-bold text-[13px] ml-1 opacity-90">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="smartdorm@gmail.com"
-                className="w-full h-[48px] bg-slate-50/50 border border-slate-200 rounded-lg px-4 text-[#334155] font-medium placeholder-[#94a3b8] outline-none transition-all focus:bg-white focus:border-blue-500/40 focus:ring-4 focus:ring-blue-500/5 shadow-sm"
-              />
+          {/* Login Card */}
+          <div className="bg-white/70 backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.05)] border border-white/50 relative overflow-hidden animate-in zoom-in-95 duration-500">
+            
+            <div className="mb-8 text-center md:text-left relative z-10">
+              <h2 className="text-3xl font-black tracking-tighter text-[#1e293b] mb-2 leading-none">Chào mừng bạn!</h2>
+              <p className="text-[#595c5e] text-base font-medium">Nhập thông tin đăng nhập của bạn để tiếp tục.</p>
             </div>
 
-            {/* Password Field */}
-            <div className="space-y-1">
-              <label className="text-[#1e293b] font-bold text-[13px] ml-1 opacity-90">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full h-[48px] bg-slate-50/50 border border-slate-200 rounded-lg px-4 text-[#334155] font-medium placeholder-[#94a3b8] outline-none transition-all focus:bg-white focus:border-blue-500/40 focus:ring-4 focus:ring-blue-500/5 shadow-sm"
-              />
-            </div>
+            {error && (
+              <div className="mb-8 p-4 bg-rose-50/50 backdrop-blur-md text-rose-600 rounded-2xl border border-rose-100 text-sm font-bold flex items-center gap-3 animate-in slide-in-from-top-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                {error}
+              </div>
+            )}
 
-            {/* Login Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-[50px] bg-[#3b82f6] hover:bg-[#2563eb] active:scale-[0.98] text-white font-bold text-base rounded-lg transition-all duration-300 shadow-[0_8px_16px_-4px_rgba(59,130,246,0.25)] disabled:opacity-50 mt-2 flex items-center justify-center"
-            >
-              {loading ? (
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <Lottie animationData={materialWaveLoading} loop className="w-full h-full" />
-                </div>
-              ) : (
-                "Login"
-              )}
-            </button>
-          </form>
-
-          {/* Separator */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-slate-100" />
-            <span className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.25em] px-2">OR</span>
-            <div className="flex-1 h-px bg-slate-100" />
-          </div>
-
-          {/* Google Login Section */}
-          <div className="space-y-5">
-            <div className="w-full group">
-              {hasValidGoogleId ? (
-                <div className="flex justify-center [&>div]:w-full active:scale-[0.98] transition-transform">
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError("Google failed")}
-                    theme="outline"
-                    shape="pill"
-                    size="large"
-                    width="100%"
+            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+              {/* Email Field */}
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#595c5e] ml-1">Email của bạn</label>
+                <div className="relative group">
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                    className="w-full bg-[#f2f4f5]/50 border-none rounded-xl px-4 py-4 text-[#1e293b] font-bold focus:ring-0 transition-all duration-300 placeholder:text-slate-300 backdrop-blur-sm"
                   />
+                  <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-[#4b49cb] group-focus-within:w-full transition-all duration-500"></div>
+                  <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#4b49cb] transition-colors" />
                 </div>
-              ) : (
-                <button className="w-full h-[48px] bg-white border border-slate-200 rounded-full flex items-center justify-center gap-3 font-semibold text-slate-600 transition-all hover:bg-slate-50 active:scale-[0.98] shadow-sm text-sm">
-                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-4 h-4" />
-                  Login with Google
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center px-1">
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#595c5e]">Mật khẩu</label>
+                  <Link to="/forgot-password" size="sm" className="text-xs font-bold text-[#4b49cb] hover:underline transition-all">Quên mật khẩu?</Link>
+                </div>
+                <div className="relative group">
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-[#f2f4f5]/50 border-none rounded-xl px-4 py-4 text-[#1e293b] font-bold focus:ring-0 transition-all duration-300 placeholder:text-slate-300 backdrop-blur-sm"
+                  />
+                  <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-[#4b49cb] group-focus-within:w-full transition-all duration-500"></div>
+                  <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#4b49cb] transition-colors" />
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-14 bg-[#4b49cb] text-white font-black text-lg rounded-2xl shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-95 transition-all duration-300 group flex items-center justify-center space-x-2 relative overflow-hidden"
+                >
+                   {loading ? (
+                    <div className="w-10 h-10">
+                      <Lottie animationData={materialWaveLoading} loop />
+                    </div>
+                  ) : (
+                    <>
+                      <span>Đăng nhập</span>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
-              )}
+              </div>
+            </form>
+
+            {/* Divider */}
+            <div className="relative my-10">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full h-[1px] bg-[#f2f4f5]"></div>
+              </div>
+              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.1em]">
+                <span className="bg-transparent px-4 text-[#595c5e]">Hoặc tiếp tục với</span>
+              </div>
             </div>
 
-            <p className="text-center text-[#64748b] font-medium text-[15px]">
-              Don't have account?{" "}
-              <Link to="/register" className="text-blue-600 font-bold hover:underline underline-offset-4 decoration-2">
-                Sign Up here!
-              </Link>
-            </p>
+            {/* Social Sign In */}
+            <div className="flex gap-4">
+              <div className="flex-1">
+                {hasValidGoogleId ? (
+                   <div className="w-full [&>div]:w-full transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError("Google failed")}
+                        theme="outline"
+                        shape="pill"
+                        size="large"
+                        width="100%"
+                      />
+                    </div>
+                ) : (
+                  <button className="w-full h-14 flex items-center justify-center gap-3 bg-white/50 border-2 border-[#f2f4f5] text-[#1e293b] font-bold rounded-2xl hover:bg-slate-50 transition-all duration-200 group backdrop-blur-sm shadow-sm" type="button">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <span className="group-hover:text-[#4b49cb] transition-colors">Google Account</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-10 text-center">
+              <p className="text-sm font-bold text-[#595c5e]">
+                Bạn mới đến đây? 
+                <Link to="/register" className="text-[#4b49cb] font-black ml-1 hover:underline underline-offset-4 decoration-2">
+                  Tạo tài khoản ngay
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Right Panel: Animated Illustration Section */}
-      <div className="hidden lg:flex flex-1 relative bg-white overflow-hidden items-center justify-center">
-        {/* Abstract Mesh Background */}
-        <div className="absolute inset-0 bg-[#f8fbff]" />
-        <div className="absolute -top-[10%] -right-[15%] w-[900px] h-[900px] bg-[#ff3b3b] rounded-full mix-blend-multiply filter blur-[120px] opacity-[0.2] animate-blob" />
-        <div className="absolute top-[20%] -right-[25%] w-[800px] h-[800px] bg-[#9333ea] rounded-full mix-blend-multiply filter blur-[130px] opacity-[0.2] animate-blob animation-delay-2000" />
-        <div className="absolute -bottom-[20%] -right-[10%] w-[1000px] h-[1000px] bg-[#3b82f6] rounded-full mix-blend-multiply filter blur-[140px] opacity-[0.25] animate-blob animation-delay-4000" />
-
-        {/* Lottie Animation: Animated House */}
-        <div className="relative z-10 w-full max-w-[650px] drop-shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
-          <Lottie
-            animationData={animationData}
-            loop={true}
-            style={{ width: "100%", height: "auto" }}
-          />
+      {/* Footer */}
+      <footer className="backdrop-blur-md bg-white/20 border-t border-white/30 flex flex-col md:flex-row justify-between items-center px-12 w-full py-12 relative z-10 transition-colors">
+        <div className="flex flex-col mb-8 md:mb-0 text-center md:text-left">
+          <span className="text-sm font-black text-[#1e293b] tracking-tighter uppercase">SMARTDORM SYSTEM</span>
+          <p className="text-[10px] uppercase tracking-widest font-bold text-[#595c5e] mt-2">© 2024 SmartDorm. All rights reserved.</p>
         </div>
-
-        {/* Subtle branding accent */}
-        <div className="absolute bottom-12 right-12 z-20 flex items-center gap-3 backdrop-blur-md bg-white/30 px-6 py-3 rounded-full border border-white/40 shadow-xl">
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
-          <span className="text-[#1a1a1a] font-black tracking-tighter text-sm">SMARTDORM ECOSYSTEM</span>
+        <div className="flex space-x-8">
+          <Link to="#" className="text-[10px] uppercase tracking-widest font-black text-[#595c5e] hover:text-[#4b49cb] transition-colors">Privacy</Link>
+          <Link to="#" className="text-[10px] uppercase tracking-widest font-black text-[#595c5e] hover:text-[#4b49cb] transition-colors">Terms</Link>
+          <Link to="#" className="text-[10px] uppercase tracking-widest font-black text-[#595c5e] hover:text-[#4b49cb] transition-colors">Support</Link>
         </div>
-      </div>
-
-      <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
+      </footer>
     </div>
   );
 }

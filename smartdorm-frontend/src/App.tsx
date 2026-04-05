@@ -28,15 +28,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+import RoomsAvailable from './pages/RoomsAvailable'
+
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/rooms-available" element={<RoomsAvailable />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       
       <Route path="/app" element={
-        <Layout />
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
       }>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="rooms" element={<Rooms />} />

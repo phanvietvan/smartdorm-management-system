@@ -64,10 +64,44 @@ export default function Dashboard() {
   )
 
   const metrics = [
-    { label: 'Phòng', value: `${stats?.rooms?.occupied || 25}/${stats?.rooms?.total || 30}`, icon: Bed, badge: '83% Capacity', badgeBg: 'bg-green-100', badgeText: 'text-green-700', iconBg: 'bg-[#eef2ff] text-[#4b49cb]' },
-    { label: 'Hóa đơn', value: '12', sub: 'chưa trả', icon: Receipt, badge: '12 Pending', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', iconBg: 'bg-[#fce7f3] text-[#973774]' },
-    { label: 'Doanh thu tháng này', value: '45.000.000 đ', icon: Banknote, badge: '+12.5%', badgeBg: 'bg-[#eef2ff]', badgeText: 'text-[#4b49cb]', iconBg: 'bg-[#e0e7ff] text-[#3e3bbf]' },
-    { label: 'Yêu cầu bảo trì', value: '3', sub: 'yêu cầu', icon: Wrench, badge: 'High Priority', badgeBg: 'bg-red-100', badgeText: 'text-red-700', iconBg: 'bg-[#ffe4e6] text-[#b41340]' }
+    { 
+      label: 'Phòng', 
+      value: `${stats?.rooms?.occupied || 0}/${stats?.rooms?.total || 0}`, 
+      icon: Bed, 
+      badge: stats?.rooms?.total ? `${Math.round((stats.rooms.occupied / stats.rooms.total) * 100)}% Capacity` : '0% Capacity', 
+      badgeBg: 'bg-green-100', 
+      badgeText: 'text-green-700', 
+      iconBg: 'bg-[#eef2ff] text-[#4b49cb]' 
+    },
+    { 
+      label: 'Hóa đơn', 
+      value: `${stats?.bills?.pending || 0}`, 
+      sub: 'chưa trả', 
+      icon: Receipt, 
+      badge: `${stats?.bills?.pending || 0} Pending`, 
+      badgeBg: 'bg-amber-100', 
+      badgeText: 'text-amber-700', 
+      iconBg: 'bg-[#fce7f3] text-[#973774]' 
+    },
+    { 
+      label: 'Doanh thu tháng này', 
+      value: `${formatCurrency(stats?.revenue || 0)} đ`, 
+      icon: Banknote, 
+      badge: '+12.5%', 
+      badgeBg: 'bg-[#eef2ff]', 
+      badgeText: 'text-[#4b49cb]', 
+      iconBg: 'bg-[#e0e7ff] text-[#3e3bbf]' 
+    },
+    { 
+      label: 'Yêu cầu bảo trì', 
+      value: `${stats?.maintenance?.pending || 0}`, 
+      sub: 'yêu cầu', 
+      icon: Wrench, 
+      badge: (stats?.maintenance?.pending || 0) > 0 ? 'High Priority' : 'All clear', 
+      badgeBg: (stats?.maintenance?.pending || 0) > 0 ? 'bg-red-100' : 'bg-emerald-100', 
+      badgeText: (stats?.maintenance?.pending || 0) > 0 ? 'text-red-700' : 'text-emerald-700', 
+      iconBg: 'bg-[#ffe4e6] text-[#b41340]' 
+    }
   ]
 
   return (
@@ -79,69 +113,107 @@ export default function Dashboard() {
 
       {/* Bento Grid Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {metrics.map((item, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow border border-[#e5e9eb]">
-            <div className="flex justify-between items-start mb-4">
-              <div className={cn("p-3 rounded-xl", item.iconBg)}>
-                <item.icon className="w-5 h-5" />
+        {metrics.filter((_, idx) => isAdmin || [0, 1, 3].includes(idx)).map((item, idx) => {
+          // If not admin, we skip revenue (idx 2)
+          // Also for tenant we might want to show their own stats but for now hiding system stats is better
+          if (!isAdmin && item.label === 'Doanh thu tháng này') return null;
+
+          return (
+            <div key={idx} className="bg-white p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow border border-[#e5e9eb]">
+              <div className="flex justify-between items-start mb-4">
+                <div className={cn("p-3 rounded-xl", item.iconBg)}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <span className={cn("text-xs font-bold px-2.5 py-1 rounded-lg", item.badgeBg, item.badgeText)}>
+                  {item.badge}
+                </span>
               </div>
-              <span className={cn("text-xs font-bold px-2.5 py-1 rounded-lg", item.badgeBg, item.badgeText)}>
-                {item.badge}
-              </span>
+              <div>
+                <p className="text-[#595c5e] text-sm font-medium">{item.label}</p>
+                <h3 className="text-2xl font-extrabold text-[#2c2f31] mt-1">
+                  {item.value} 
+                  {item.sub && <span className="text-sm font-normal text-[#595c5e] ml-1.5">{item.sub}</span>}
+                </h3>
+              </div>
             </div>
-            <div>
-              <p className="text-[#595c5e] text-sm font-medium">{item.label}</p>
-              <h3 className="text-2xl font-extrabold text-[#2c2f31] mt-1">
-                {item.value} 
-                {item.sub && <span className="text-sm font-normal text-[#595c5e] ml-1.5">{item.sub}</span>}
-              </h3>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-        {/* Chart */}
-        <div className="xl:col-span-2 bg-white p-6 md:p-8 rounded-2xl border border-[#e5e9eb]">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h4 className="text-lg font-bold text-[#2c2f31]">Biểu đồ doanh thu</h4>
-              <p className="text-sm text-[#595c5e] mt-1">Hiệu suất tài chính năm 2023</p>
+        {/* Chart (Only Admin) */}
+        {isAdmin ? (
+          <div className="xl:col-span-2 bg-white p-6 md:p-8 rounded-2xl border border-[#e5e9eb]">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h4 className="text-lg font-bold text-[#2c2f31]">Biểu đồ doanh thu</h4>
+                <p className="text-sm text-[#595c5e] mt-1">Hiệu suất tài chính năm {selectedYear}</p>
+              </div>
+              <select 
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="bg-[#f5f7f9] border border-[#e5e9eb] rounded-xl text-xs font-bold py-2 px-4 outline-none focus:border-[#4b49cb]"
+              >
+                <option value={new Date().getFullYear()}>Năm nay</option>
+                <option value={new Date().getFullYear() - 1}>Năm ngoái</option>
+              </select>
             </div>
-            <select className="bg-[#f5f7f9] border border-[#e5e9eb] rounded-xl text-xs font-bold py-2 px-4 outline-none focus:border-[#4b49cb]">
-              <option>Năm nay</option>
-              <option>Năm ngoái</option>
-            </select>
+            
+            <div className="w-full h-[280px]">
+               <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#4b49cb" stopOpacity={0.2}/>
+                      <stop offset="100%" stopColor="#4b49cb" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="#eef1f3" strokeDasharray="4 4" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600, fill: '#595c5e' }} dy={10} />
+                  <YAxis hide />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e9eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    labelStyle={{ color: '#2c2f31', fontWeight: 'bold', marginBottom: '4px' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#4b49cb" 
+                    strokeWidth={3} 
+                    fill="url(#chartGradient)" 
+                    activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2, fill: '#4b49cb' }} 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          
-          <div className="w-full h-[280px]">
-             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#4b49cb" stopOpacity={0.2}/>
-                    <stop offset="100%" stopColor="#4b49cb" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} stroke="#eef1f3" strokeDasharray="4 4" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600, fill: '#595c5e' }} dy={10} />
-                <YAxis hide />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e9eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  labelStyle={{ color: '#2c2f31', fontWeight: 'bold', marginBottom: '4px' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#4b49cb" 
-                  strokeWidth={3} 
-                  fill="url(#chartGradient)" 
-                  activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2, fill: '#4b49cb' }} 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+        ) : (
+          <div className="xl:col-span-2 bg-[#4b49cb] p-8 md:p-10 rounded-3xl text-white relative overflow-hidden group">
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <div>
+                <span className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-[0.2em]">Cá nhân hóa</span>
+                <h4 className="text-4xl font-black mt-6 tracking-tighter leading-tight italic">
+                  Chào mừng trở lại,<br/>{user?.fullName}
+                </h4>
+                <p className="text-indigo-100/80 mt-4 text-lg font-medium max-w-md">
+                  SmartDorm giúp bạn quản lý cuộc sống tại ký túc xá một cách hiện đại và tiện lợi nhất.
+                </p>
+              </div>
+              <div className="mt-12 flex gap-4">
+                <div className="p-4 bg-white/10 rounded-2xl flex-1 border border-white/10">
+                   <p className="text-[10px] uppercase font-bold opacity-60">Trạng thái</p>
+                   <p className="text-xl font-bold mt-1 tracking-tight">Ổn định</p>
+                </div>
+                <div className="p-4 bg-white/10 rounded-2xl flex-1 border border-white/10">
+                   <p className="text-[10px] uppercase font-bold opacity-60">Phòng của bạn</p>
+                   <p className="text-xl font-bold mt-1 tracking-tight truncate">{(user as any)?.roomId?.name || '---'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="absolute -right-20 -top-20 w-96 h-96 bg-white/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-white/20 transition-all duration-700"></div>
+            <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-indigo-400/20 rounded-full blur-[60px] pointer-events-none"></div>
           </div>
-        </div>
+        )}
 
         {/* Maintenance Panel */}
         <div className="bg-[#4b49cb] p-6 md:p-8 rounded-2xl text-white flex flex-col justify-between relative overflow-hidden">

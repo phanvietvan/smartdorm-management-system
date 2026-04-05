@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { usersApi, type User } from '../api/users'
 import { roomsApi, type Room } from '../api/rooms'
+import { notificationsApi } from '../api/notifications'
 import { useAuth } from '../context/AuthContext'
 
 export default function Users() {
@@ -114,6 +115,19 @@ export default function Users() {
       alert(err.response?.data?.message || 'Lỗi khi gán phòng')
     } finally {
       setAssigning(false)
+    }
+  }
+
+  const handleUnassign = async (u: User) => {
+    if (!window.confirm(`Bạn có chắc muốn thu hồi phòng của ${u.fullName}? Vai trò sẽ chuyển về Khách.`)) return
+    setUpdatingId(u._id)
+    try {
+      await usersApi.unassignTenant({ userId: u._id })
+      loadData()
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Lỗi khi thu hồi phòng')
+    } finally {
+      setUpdatingId(null)
     }
   }
 
@@ -263,15 +277,27 @@ export default function Users() {
                               </button>
                             </>
                           ) : (
-                            isGuest && (
-                              <button
-                                type="button"
-                                className="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"
-                                onClick={() => handleOpenAssignModal(u)}
-                              >
-                                Gán phòng
-                              </button>
-                            )
+                            <div className="flex gap-2">
+                              {isGuest && (
+                                <button
+                                  type="button"
+                                  className="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"
+                                  onClick={() => handleOpenAssignModal(u)}
+                                >
+                                  Gán phòng
+                                </button>
+                              )}
+                              {u.role === 'tenant' && u.roomId && (
+                                <button
+                                  type="button"
+                                  className="px-3 py-1.5 text-xs font-bold text-amber-600 bg-amber-50 border border-amber-100 rounded-lg hover:bg-amber-600 hover:text-white transition-all"
+                                  disabled={updatingId === u._id}
+                                  onClick={() => handleUnassign(u)}
+                                >
+                                  Thu hồi
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>
