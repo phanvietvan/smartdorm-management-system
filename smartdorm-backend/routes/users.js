@@ -7,6 +7,7 @@ const userController = require("../controllers/userController");
 const router = express.Router();
 
 router.get("/", authenticate, requirePermission(PERMISSIONS.USERS_VIEW), userController.getAll);
+router.get("/roommates", authenticate, userController.getRoommates);
 router.put("/me", authenticate, userController.updateProfile);
 router.get("/:id", authenticate, requirePermission(PERMISSIONS.USERS_VIEW), userController.getById);
 router.post("/", authenticate, requirePermission(PERMISSIONS.USERS_CREATE), userController.create);

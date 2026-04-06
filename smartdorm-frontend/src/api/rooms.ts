@@ -8,9 +8,10 @@ export type Room = {
   capacity: number; 
   floor: number; 
   price?: number; 
+  contactPhone?: string;
   status: string; 
   areaId?: string | { _id: string; name: string };
-  amenities?: string[];
+  amenities?: string;
   equipments?: Equipment[];
   tenant?: { _id: string; fullName: string };
 }

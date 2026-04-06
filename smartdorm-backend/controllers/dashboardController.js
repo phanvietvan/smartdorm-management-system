@@ -4,35 +4,67 @@ const Bill = require("../models/Bill");
 const Payment = require("../models/Payment");
 const MaintenanceRequest = require("../models/MaintenanceRequest");
 const Visitor = require("../models/Visitor");
+const RentalRequest = require("../models/RentalRequest");
 
 exports.getStats = async (req, res) => {
   try {
-    const [totalRooms, availableRooms, totalUsers, totalBills, paidBills, totalRevenue, pendingMaintenance, todayVisitors] = await Promise.all([
+    const [
+      totalRooms, 
+      availableRooms, 
+      totalUsers, 
+      totalBills, 
+      paidBills, 
+      totalRevenue, 
+      pendingMaintenance, 
+      todayVisitors,
+      pendingRentals
+    ] = await Promise.all([
       Room.countDocuments(),
       Room.countDocuments({ status: "available" }),
       User.countDocuments({ role: { $ne: "guest" } }),
       Bill.countDocuments(),
       Bill.countDocuments({ status: "paid" }),
-      Payment.aggregate([{ $match: { status: "confirmed" } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
+      Payment.aggregate([
+        { $match: { status: "confirmed" } }, 
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]),
       MaintenanceRequest.countDocuments({ status: { $in: ["pending", "in_progress"] } }),
       Visitor.countDocuments({
         checkInAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) },
         checkOutAt: null,
       }),
+      RentalRequest.countDocuments({ status: "pending" })
     ]);
 
     const revenue = totalRevenue[0]?.total || 0;
 
+    console.log("DASHBOARD STATS DEBUG:", {
+      totalRooms,
+      availableRooms,
+      totalUsers,
+      totalBills,
+      pendingRentals
+    });
+
     res.json({
-      rooms: { total: totalRooms, available: availableRooms, occupied: totalRooms - availableRooms },
-      users: totalUsers,
-      bills: { total: totalBills, paid: paidBills, pending: totalBills - paidBills },
-      revenue,
-      maintenance: { pending: pendingMaintenance },
-      visitors: { today: todayVisitors },
-      rentals: { pending: 0 }, // Trả về 0 để tránh crash Frontend cũ
+      rooms: { 
+        total: totalRooms || 0, 
+        available: availableRooms || 0, 
+        occupied: (totalRooms || 0) - (availableRooms || 0) 
+      },
+      users: totalUsers || 0,
+      bills: { 
+        total: totalBills || 0, 
+        paid: paidBills || 0, 
+        pending: (totalBills || 0) - (paidBills || 0) 
+      },
+      revenue: revenue || 0,
+      maintenance: { pending: pendingMaintenance || 0 },
+      visitors: { today: todayVisitors || 0 },
+      rentals: { pending: pendingRentals || 0 },
     });
   } catch (err) {
+    console.error("Dashboard stats error:", err);
     res.status(500).json({ message: err.message });
   }
 };

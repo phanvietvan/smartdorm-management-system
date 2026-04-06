@@ -7,6 +7,8 @@ export type MaintenanceRequest = {
   assignedTo?: { _id: string; fullName: string }
   title: string
   description?: string
+  category?: string
+  urgency?: string
   status: string
   images?: string[]
   note?: string
@@ -20,7 +22,7 @@ export const maintenanceApi = {
   getAll: (params?: { status?: string; roomId?: string }) =>
     api.get<MaintenanceRequest[]>('/maintenance', { params }),
   getById: (id: string) => api.get<MaintenanceRequest>(`/maintenance/${id}`),
-  create: (data: { roomId: string; title: string; description?: string }) =>
+  create: (data: { roomId: string; title: string; description?: string; category?: string; urgency?: string }) =>
     api.post<MaintenanceRequest>('/maintenance', data),
   update: (id: string, data: Partial<{ status: string; images: string[]; note: string }>) =>
     api.put<MaintenanceRequest>(`/maintenance/${id}`, data),

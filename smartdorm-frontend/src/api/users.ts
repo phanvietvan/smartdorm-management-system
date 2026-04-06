@@ -28,10 +28,11 @@ export const usersApi = {
   delete: (id: string) => api.delete(`/users/${id}`),
   approve: (id: string) => api.post<User>(`/users/${id}/approve`),
   reject: (id: string) => api.post<User>(`/users/${id}/reject`),
-  assignTenant: (data: { userId: string; roomId: string }) =>
+  assignTenant: (data: { userId?: string; roomId: string; phone?: string }) =>
     api.post('/users/assign-tenant', data),
   unassignTenant: (data: { userId: string }) =>
     api.post('/users/unassign-tenant', data),
   updateMe: (data: Partial<User>) =>
     api.put<User>('/users/me', data),
+  getRoommates: () => api.get<User[]>('/users/roommates'),
 }

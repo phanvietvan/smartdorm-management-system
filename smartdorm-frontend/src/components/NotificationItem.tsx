@@ -1,6 +1,10 @@
 import type { Notification } from '../api/notifications'
+import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { notificationsApi } from '../api/notifications'
+import { useAuth } from '../context/AuthContext'
 
-/** Thời gian tương đối như Facebook: "2 phút trước", "Hôm qua"... */
+/** Relative time formatter */
 export function getRelativeTime(dateStr: string): string {
   const d = new Date(dateStr)
   const now = new Date()
@@ -18,7 +22,6 @@ export function getRelativeTime(dateStr: string): string {
   return d.toLocaleDateString('vi-VN')
 }
 
-/** Icon và màu theo loại thông báo */
 const typeConfig: Record<string, { icon: React.ReactNode; bg: string; color: string }> = {
   bill: {
     icon: (
@@ -34,12 +37,12 @@ const typeConfig: Record<string, { icon: React.ReactNode; bg: string; color: str
     bg: 'bg-amber-100',
     color: 'text-amber-600'
   },
-  contract: {
+  payment: {
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     ),
-    bg: 'bg-violet-100',
-    color: 'text-violet-600'
+    bg: 'bg-indigo-100',
+    color: 'text-indigo-600'
   },
   system: {
     icon: (
@@ -57,94 +60,110 @@ const typeConfig: Record<string, { icon: React.ReactNode; bg: string; color: str
   }
 }
 
-export function getTypeConfig(type: string) {
-  return typeConfig[type] || typeConfig.general
-}
-
 type NotificationItemProps = {
   note: Notification
-  onMarkRead?: (id: string) => void
+  onMarkRead: (id: string) => void
   compact?: boolean
-  onClick?: () => void
   index?: number
 }
 
-/** Component thông báo theo style Facebook: avatar/icon trái, nội dung phải, trạng thái đọc rõ ràng */
-export default function NotificationItem({ note, onMarkRead, compact, onClick, index = 0 }: NotificationItemProps) {
-  const cfg = getTypeConfig(note.type)
-  const avatarUrl = note.userId?.fullName
-    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(note.userId.fullName)}&background=6366f1&color=fff`
-    : null
+const EMOJIS = ['👍', '❤️', '👏', '🔥']
+
+export default function NotificationItem({ note, onMarkRead, compact, index = 1 }: NotificationItemProps) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const [reactions, setReactions] = useState(note.reactions || [])
+  const cfg = typeConfig[note.type] || typeConfig.general
+  
+  const actorAvatar = note.actor?.avatarUrl || (note.actor?.fullName ? `https://ui-avatars.com/api/?name=${encodeURIComponent(note.actor.fullName)}&background=6366f1&color=fff` : null)
+
+  const handleToggleReaction = async (emoji: string) => {
+    try {
+      const res = await notificationsApi.toggleReaction(note._id, emoji)
+      if (res.data?.data) {
+        setReactions(res.data.data)
+      }
+    } catch (err) {
+      console.error('Toggle reaction failed')
+    }
+  }
+
+  const handleClick = () => {
+    if (!note.isRead) onMarkRead(note._id)
+    if (note.link) navigate(note.link)
+  }
 
   const content = (
     <div className="flex gap-3 flex-1 min-w-0">
-      {/* Avatar hoặc Icon loại thông báo - hover scale */}
-      <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover ring-2 ring-white/80 shadow-md" />
+      <div className="flex-shrink-0">
+        {actorAvatar ? (
+          <img src={actorAvatar} alt="" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover ring-2 ring-white shadow-md" />
         ) : (
           <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-sm ring-1 ring-black/5 ${cfg.bg} ${cfg.color}`}>
             {cfg.icon}
           </div>
         )}
       </div>
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <p className={`font-semibold text-slate-900 leading-snug truncate ${compact ? 'text-sm' : 'text-sm sm:text-base'}`}>{note.title}</p>
-        <p className="text-sm text-slate-600 mt-0.5 line-clamp-2 break-words">{note.content}</p>
-        <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
-          <span className={`${cfg.color} font-medium uppercase tracking-wide`}>{note.type}</span>
-          <span>·</span>
-          <span>{getRelativeTime(note.createdAt)}</span>
-        </p>
+      <div className="flex-1 min-w-0">
+        <p className={`font-bold text-slate-900 leading-snug whitespace-nowrap overflow-hidden text-ellipsis ${compact ? 'text-xs' : 'text-sm'}`}>{note.title}</p>
+        <p className={`text-slate-600 mt-0.5 line-clamp-2 ${compact ? 'text-[11px]' : 'text-sm'}`}>{note.message}</p>
+        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+          <p className="text-[10px] text-slate-400 flex items-center gap-1">
+            <span className={`${cfg.color} font-black uppercase tracking-widest`}>{note.type}</span>
+            <span>·</span>
+            <span>{getRelativeTime(note.createdAt)}</span>
+          </p>
+          
+          {/* Reaction counts */}
+          {reactions.length > 0 && (
+            <div className="flex -space-x-1 items-center bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">
+               {Array.from(new Set(reactions.map(r => r.emoji))).slice(0, 3).map(e => (
+                 <span key={e} className="text-[10px]">{e}</span>
+               ))}
+               <span className="ml-1 text-[9px] font-bold text-slate-500">{reactions.length}</span>
+            </div>
+          )}
+        </div>
       </div>
-      {!note.isRead && compact && (
-        <span className="flex-shrink-0 w-2 h-2 rounded-full bg-indigo-500 mt-2 shadow-[0_0_0_2px_rgba(99,102,241,0.4)]" />
-      )}
     </div>
   )
 
-  const baseClasses = `flex items-start gap-3 p-4 cursor-pointer transition-all duration-300 ease-out group relative min-w-0 overflow-hidden ${
-    !note.isRead
-      ? 'bg-indigo-50/70 hover:bg-indigo-50 border-l-[3px] border-l-indigo-500 hover:border-l-indigo-600'
-      : 'bg-white/80 hover:bg-white border-l-[3px] border-l-transparent hover:border-l-slate-200'
-  }`
-
-  const animStyle = !compact ? { animationDelay: `${Math.min(index * 50, 500)}ms`, opacity: 0 } as React.CSSProperties : undefined
-  const animClass = !compact ? 'notif-item-enter' : ''
-
-  const fullContent = compact ? (
-    <div className={baseClasses} onClick={onClick}>
-      {content}
-      {onMarkRead && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onMarkRead(note._id); }}
-          className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-100 rounded-lg transition-all duration-200"
-          title="Đánh dấu đã đọc"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-        </button>
-      )}
-    </div>
-  ) : (
-    <div
-      className={`${baseClasses} rounded-xl ${animClass}`}
-      style={animStyle}
-      onClick={() => { if (!note.isRead) onMarkRead?.(note._id); onClick?.(); }}
+  return (
+    <div 
+      className={`group relative flex items-start gap-4 p-5 cursor-pointer transition-all duration-300 ${
+        !note.isRead ? 'bg-indigo-50/50 border-l-4 border-l-primary' : 'hover:bg-slate-50 border-l-4 border-l-transparent'
+      }`}
+      onClick={handleClick}
     >
       {content}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {!note.isRead && <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_0_2px_rgba(99,102,241,0.4)]" />}
-        {onMarkRead && !note.isRead && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onMarkRead(note._id); }}
-          className="px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-all duration-200"
-        >
-            Đánh dấu đã đọc
-          </button>
-        )}
+      
+      {/* Action panel (Emoji + Mark as read) */}
+      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+         {/* Emoji Panel */}
+         <div className="hidden sm:flex items-center gap-1.5 bg-white border border-slate-100 rounded-full px-2 py-1 shadow-sm">
+            {EMOJIS.map(e => {
+                const isSelected = reactions.some(r => r.userId === user?._id && r.emoji === e)
+                return (
+                  <button 
+                    key={e} 
+                    className={`hover:scale-125 transition-transform text-sm ${isSelected ? 'opacity-100' : 'opacity-40 hover:opacity-100'}`}
+                    onClick={(ev) => { ev.stopPropagation(); handleToggleReaction(e); }}
+                  >
+                    {e}
+                  </button>
+                )
+            })}
+         </div>
+
+         {!note.isRead && (
+           <button 
+            onClick={(e) => { e.stopPropagation(); onMarkRead(note._id); }}
+            className="p-2 bg-white text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl border border-slate-100 transition-all font-bold"
+           >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
+           </button>
+         )}
       </div>
     </div>
   )
-
-  return fullContent
 }

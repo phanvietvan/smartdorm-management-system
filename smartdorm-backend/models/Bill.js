@@ -17,7 +17,7 @@ const billSchema = new mongoose.Schema(
     totalAmount: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["pending", "paid", "overdue"],
+      enum: ["pending", "paid", "overdue", "disputed"],
       default: "pending",
     },
     dueDate: { type: Date },

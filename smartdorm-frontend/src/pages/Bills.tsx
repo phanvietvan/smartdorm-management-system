@@ -5,6 +5,7 @@ import { notificationsApi } from '../api/notifications'
 import { roomsApi, type Room } from '../api/rooms'
 import { usersApi, type User } from '../api/users'
 import { useAuth } from '../context/AuthContext'
+import { cn } from '../lib/utils'
 
 export default function Bills() {
   const { user } = useAuth()
@@ -33,7 +34,8 @@ export default function Bills() {
 
   const load = () => {
     if (isTenant) {
-      billsApi.getAll({ roomId: user?.roomId }).then((r) => setBills(r.data)).catch(() => setError('Không thể tải hóa đơn của bạn'))
+      const roomId = typeof user?.roomId === 'object' ? (user.roomId as any)?._id : user?.roomId
+      billsApi.getAll({ roomId }).then((r) => setBills(r.data)).catch(() => setError('Không thể tải hóa đơn của bạn'))
     } else {
       billsApi.getAll().then((r) => setBills(r.data)).catch(() => setError('Không thể tải hóa đơn'))
       roomsApi.getAll().then((r) => setRooms(r.data)).catch(() => {})
@@ -46,7 +48,8 @@ export default function Bills() {
     const fetchData = async () => {
       try {
         if (isTenant) {
-          const b = await billsApi.getAll({ roomId: user?.roomId })
+          const roomId = typeof user?.roomId === 'object' ? (user.roomId as any)?._id : user?.roomId
+          const b = await billsApi.getAll({ roomId })
           setBills(b.data)
         } else {
           const [b, r, u] = await Promise.all([
@@ -307,106 +310,190 @@ export default function Bills() {
         </div>
       )}
 
-      {/* Bill List / Table */}
+      {/* TENANT PORTAL UI - EDITORIAL CANVAS */}
       {isTenant ? (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          {bills.length === 0 ? (
-            <div className="col-span-full py-24 bg-white rounded-[2.5rem] border border-dashed border-slate-200 text-center space-y-5">
-              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
-                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          {/* Hero Section: Account Statement */}
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-indigo-400 to-indigo-500 p-10 rounded-[2.5rem] text-white flex flex-col justify-between shadow-[0_20px_50px_rgba(74,63,226,0.1)] min-h-[350px]">
+              <div className="relative z-10">
+                <p className="text-white/70 font-black tracking-[0.2em] text-[10px] mb-4 uppercase">Sao kê tài khoản hiện tại</p>
+                <h2 className="text-5xl font-black tracking-tighter font-display leading-[0.9] text-white">Tổng dư nợ<br/>cần thanh toán.</h2>
               </div>
-              <div>
-                <p className="text-xl font-bold text-slate-700 font-['Outfit']">Bạn hiện chưa có hóa đơn</p>
-                <p className="text-sm text-slate-400 max-w-sm mx-auto">Thông tin hóa đơn hàng tháng của bạn sẽ được hiển thị tại đây sau khi quản lý lập hóa đơn.</p>
-              </div>
-            </div>
-          ) : (
-            bills.map(b => (
-              <div key={b._id} className="relative bg-white rounded-[2.2rem] overflow-hidden shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 border border-slate-100 group">
-                {/* Status Accent Bar */}
-                <div className={`absolute left-0 top-0 bottom-0 w-2 ${b.status === 'paid' ? 'bg-emerald-500' : b.status === 'overdue' ? 'bg-rose-500' : 'bg-amber-500'}`}></div>
-                
-                <div className="p-8 pb-10">
-                  <div className="flex justify-between items-start mb-10">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                         <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Kỳ thanh toán</span>
-                      </div>
-                      <h3 className="text-3xl font-extrabold text-slate-900 font-['Outfit'] flex items-baseline gap-2">
-                        Tháng {b.month}
-                        <span className="text-lg font-medium text-slate-400">/ {b.year}</span>
-                      </h3>
-                    </div>
-                    
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border text-[11px] font-bold uppercase tracking-wider ${
-                      b.status === 'paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                      b.status === 'overdue' ? 'bg-rose-50 text-rose-600 border-rose-100' : 
-                      'bg-amber-50 text-amber-600 border-amber-100'
-                    }`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${b.status === 'paid' ? 'bg-emerald-500' : b.status === 'overdue' ? 'bg-rose-500' : 'bg-amber-500'}`}></div>
-                      {statusLabel[b.status] || b.status}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-                    <div className="space-y-5">
-                      <div className="p-5 bg-indigo-50/40 rounded-3xl border border-indigo-100/50">
-                        <p className="text-[11px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5">Tổng số tiền</p>
-                        <p className="text-3xl font-black text-indigo-600 font-['Outfit'] tabular-nums">
-                          {b.totalAmount?.toLocaleString()}
-                          <span className="ml-1 text-sm font-semibold opacity-70">₫</span>
-                        </p>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        <span className="px-3 py-1.5 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-bold border border-slate-100 italic">Mã: #{b._id.slice(-6).toUpperCase()}</span>
-                        <span className="px-3 py-1.5 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-bold border border-slate-100">Hạn: 10/{(b.month % 12) + 1}</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3.5 border-l border-slate-100/80 pl-8">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-400 font-medium">Tiền phòng</span>
-                        <span className="font-bold text-slate-700">{b.rentAmount?.toLocaleString()} ₫</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-400 font-medium">Điện ({b.electricityAmount/3500} kWh)</span>
-                        <span className="font-bold text-slate-700">{b.electricityAmount?.toLocaleString()} ₫</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-400 font-medium">Tiền nước</span>
-                        <span className="font-bold text-slate-700">{b.waterAmount?.toLocaleString()} ₫</span>
-                      </div>
-                      {b.otherAmount > 0 && (
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-slate-400 font-medium">Phụ phí</span>
-                          <span className="font-bold text-slate-700">{b.otherAmount?.toLocaleString()} ₫</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex border-t border-slate-50 divide-x divide-slate-50 bg-slate-50/10">
-                  <Link 
-                    to={`/app/bills/${b._id}`} 
-                    className="flex-1 py-5 text-slate-600 font-bold text-center hover:bg-slate-50 hover:text-indigo-600 transition-all text-xs tracking-wider uppercase font-['Outfit']"
-                  >
-                    Xem chi tiết chỉ số
-                  </Link>
-                  {b.status !== 'paid' && (
-                    <Link 
-                      to="/app/payments" 
-                      className="flex-1 py-5 bg-indigo-600 text-white font-bold text-center hover:bg-indigo-700 transition-all text-xs tracking-wider uppercase shadow-[0_15px_30px_-5px_rgba(79,70,229,0.3)] font-['Outfit']"
-                    >
-                      Thanh toán ngay
-                    </Link>
+              
+              <div className="relative z-10">
+                <div className="flex items-baseline gap-4 mb-10">
+                  <span className="text-7xl font-black font-display tracking-tighter text-white">
+                    {bills.filter(b => b.status === 'pending' || b.status === 'unpaid').reduce((acc, b) => acc + (b.totalAmount || 0), 0).toLocaleString()} <span className="text-3xl opacity-50 font-normal">₫</span>
+                  </span>
+                  {bills.some(b => b.status !== 'paid') && (
+                    <span className="bg-white/20 text-white px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase backdrop-blur-md">Hạn chót: 10/{(new Date().getMonth() + 2) % 12 || 12}</span>
                   )}
                 </div>
+                
+                <div className="flex gap-4">
+                  <Link to="/app/payments" className="bg-white text-indigo-500 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.03] active:scale-[0.98] transition-all flex items-center gap-3 shadow-xl">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Thanh toán ngay
+                  </Link>
+                  <button className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all flex items-center gap-3 backdrop-blur-sm">
+                    Cài đặt thanh toán
+                  </button>
+                </div>
               </div>
-            ))
-          )}
+              
+              {/* Decorative Elements */}
+              <div className="absolute -right-24 -bottom-24 w-72 h-72 bg-white/10 rounded-full blur-[80px] pointer-events-none"></div>
+              <div className="absolute right-12 top-12 w-48 h-48 bg-white/10 rounded-full blur-[60px] pointer-events-none"></div>
+            </div>
+
+            {/* Eco-Incentive Program Card (Bento Style) */}
+            <div className="bg-white p-9 rounded-[2.5rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 flex flex-col justify-between group overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
+                <svg className="w-32 h-32 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253"></path></svg>
+              </div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 text-emerald-500 mb-6">
+                  <div className="p-2 bg-emerald-50 rounded-lg">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                  </div>
+                  <span className="text-[10px] font-black tracking-[0.2em] uppercase">ECO-INCENTIVE</span>
+                </div>
+                <h3 className="text-2xl font-black font-display tracking-tight leading-tight mb-4">Ghi nhận sống xanh.</h3>
+                <p className="text-slate-500 text-sm leading-relaxed font-medium">
+                  Mức tiêu thụ năng lượng của bạn đang thấp hơn trung bình khu nhà <span className="text-emerald-500 font-bold">12%</span>. Bạn nhận được một khoản tin dụng quà tặng!
+                </p>
+              </div>
+              
+              <div className="mt-10 p-5 bg-emerald-50 rounded-2xl flex items-center gap-5 border border-emerald-100/50">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                  <span className="text-sm font-black">-đ</span>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest opacity-70">ÁP DỤNG THÁNG TỚI</p>
+                  <p className="text-base font-bold text-slate-800">Sustainability Credit</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Monthly Breakdown: Service Cards */}
+          <section>
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-black font-display tracking-tight">Chi tiết hóa đơn tháng gần nhất</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dữ liệu từ {bills[0] ? `tháng ${bills[0].month}/${bills[0].year}` : 'N/A'}</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Rent */}
+              <div className="bg-white p-7 rounded-[2rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 hover:shadow-xl transition-all duration-300 group">
+                <div className="w-14 h-14 bg-primary/5 rounded-2xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">TIỀN PHÒNG</p>
+                <p className="text-2xl font-black font-display text-slate-800">{bills[0]?.rentAmount?.toLocaleString()} đ</p>
+                <div className="text-[10px] text-emerald-500 font-bold mt-4 flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full w-fit">
+                  <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
+                  Fixed Rate
+                </div>
+              </div>
+              
+              {/* Electricity */}
+              <div className="bg-white p-7 rounded-[2rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 hover:shadow-xl transition-all duration-300 group">
+                <div className="w-14 h-14 bg-amber-500/5 rounded-2xl flex items-center justify-center text-amber-500 mb-6 group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">TIỀN ĐIỆN</p>
+                <p className="text-2xl font-black font-display text-slate-800">{bills[0]?.electricityAmount?.toLocaleString()} đ</p>
+                <div className="text-[10px] text-amber-600 font-bold mt-4 flex items-center gap-1.5 px-3 py-1 bg-amber-50 rounded-full w-fit">
+                   <div className="w-1 h-1 bg-amber-500 rounded-full"></div>
+                   {(bills[0]?.electricityAmount || 0) / 3500} kWh
+                </div>
+              </div>
+              
+              {/* Water */}
+              <div className="bg-white p-7 rounded-[2rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 hover:shadow-xl transition-all duration-300 group">
+                <div className="w-14 h-14 bg-blue-500/5 rounded-2xl flex items-center justify-center text-blue-500 mb-6 group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">TIỀN NƯỚC</p>
+                <p className="text-2xl font-black font-display text-slate-800">{bills[0]?.waterAmount?.toLocaleString()} đ</p>
+                <div className="text-[10px] text-blue-600 font-bold mt-4 flex items-center gap-1.5 px-3 py-1 bg-blue-50 rounded-full w-fit">
+                   <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
+                   Metered Usage
+                </div>
+              </div>
+              
+              {/* Internet/Others */}
+              <div className="bg-white p-7 rounded-[2rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 hover:shadow-xl transition-all duration-300 group">
+                <div className="w-14 h-14 bg-rose-500/5 rounded-2xl flex items-center justify-center text-rose-500 mb-6 group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.485c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+                </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">PHỤ PHÍ</p>
+                <p className="text-2xl font-black font-display text-slate-800">{(bills[0]?.otherAmount || 0).toLocaleString()} đ</p>
+                <div className="text-[10px] text-rose-500 font-bold mt-4 flex items-center gap-1.5 px-3 py-1 bg-rose-50 rounded-full w-fit">
+                   <div className="w-1 h-1 bg-rose-500 rounded-full"></div>
+                   Building Services
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Payment History Section */}
+          <section className="bg-white rounded-[2.5rem] overflow-hidden shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50">
+            <div className="p-9 flex items-center justify-between border-b border-slate-50">
+              <h3 className="text-2xl font-black font-display tracking-tight">Lịch sử thanh toán</h3>
+              <button className="text-primary font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:underline">
+                Xem chi tiết
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50/50 text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
+                    <th className="px-9 py-6">Mã hóa đơn</th>
+                    <th className="px-9 py-6">Kỳ thu</th>
+                    <th className="px-9 py-6">Số tiền</th>
+                    <th className="px-9 py-6">Trạng thái</th>
+                    <th className="px-9 py-6 text-right">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {bills.length > 0 ? (
+                    bills.map((bill) => (
+                      <tr key={bill._id} className="hover:bg-slate-50/50 transition-all group">
+                        <td className="px-9 py-6">
+                           <span className="text-sm font-black text-slate-800 font-display">#INV-{bill._id.slice(-6).toUpperCase()}</span>
+                        </td>
+                        <td className="px-9 py-6 text-xs text-slate-500 font-bold uppercase tracking-widest leading-none">Tháng {bill.month}/{bill.year}</td>
+                        <td className="px-9 py-6 font-black text-slate-800 text-lg tracking-tight font-display">{bill.totalAmount?.toLocaleString()} đ</td>
+                        <td className="px-9 py-6">
+                           <span className={cn(
+                             "px-4 py-1.5 text-[9px] font-black rounded-full uppercase tracking-widest inline-block border",
+                             bill.status === 'paid' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : 
+                             bill.status === 'pending' ? "bg-amber-50 text-amber-600 border-amber-100" : 
+                             "bg-rose-50 text-rose-600 border-rose-100"
+                           )}>
+                             {bill.status === 'paid' ? 'ĐÃ TRẢ' : bill.status === 'pending' ? 'CHỜ TRẢ' : 'QUÁ HẠN'}
+                           </span>
+                        </td>
+                        <td className="px-9 py-6 text-right">
+                          <Link to={`/app/bills/${bill._id}`} className="p-3 bg-slate-50 text-slate-400 hover:bg-primary hover:text-white rounded-xl transition-all inline-block shadow-sm">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-9 py-20 text-center text-slate-400 italic font-medium">Bạn chưa có dữ liệu giao dịch nào.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">

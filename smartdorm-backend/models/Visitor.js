@@ -10,6 +10,12 @@ const visitorSchema = new mongoose.Schema(
     checkOutAt: { type: Date },
     purpose: { type: String },
     idCard: { type: String },
+    plateNumber: { type: String },
+    status: {
+      type: String,
+      enum: ["waiting", "allowed", "denied", "checked_out"],
+      default: "waiting",
+    },
     registeredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }

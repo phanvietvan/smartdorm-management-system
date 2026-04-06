@@ -59,6 +59,12 @@ exports.update = async (req, res) => {
     const oldUser = await User.findById(req.params.id).select("status role");
     const { password, ...rest } = req.body;
     const updateData = { ...rest };
+    
+    // Tự động chuyển guest thành tenant khi được duyệt qua update
+    if (updateData.status === "approved" && oldUser.role === ROLES.GUEST && !updateData.role) {
+      updateData.role = ROLES.TENANT;
+    }
+
     if (password) updateData.password = password;
     const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -170,7 +176,7 @@ exports.approve = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { status: "approved", isActive: true },
+      { status: "approved", isActive: true, role: ROLES.TENANT },
       { new: true }
     ).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -222,5 +228,24 @@ exports.updateProfile = async (req, res) => {
     res.json({ success: true, message: "Cập nhật hồ sơ thành công", data: formatUser(user) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getRoommates = async (req, res) => {
+  try {
+    if (!req.user || !req.user.roomId) {
+      return res.status(200).json([]); // Không có phòng thì không có bạn cùng phòng
+    }
+
+    const roomId = typeof req.user.roomId === 'object' ? req.user.roomId._id : req.user.roomId;
+    
+    const roommates = await User.find({ 
+      roomId, 
+      _id: { $ne: req.user._id } // Loại trừ chính mình
+    }).select("fullName email avatarUrl status phone");
+    
+    res.json(roommates);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

@@ -18,7 +18,7 @@ async function authenticate(req, res, next) {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.userId).select("+password");
+    const user = await User.findById(decoded.userId).select("+password").populate("roomId");
 
     if (!user) {
       return res.status(401).json({ message: "Người dùng không tồn tại." });
@@ -54,7 +54,7 @@ async function optionalAuth(req, res, next) {
     if (!token) return next();
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(decoded.userId).populate("roomId");
 
     if (user && user.isActive) {
       req.user = user;

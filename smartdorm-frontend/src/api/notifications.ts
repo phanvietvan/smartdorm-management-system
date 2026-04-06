@@ -2,49 +2,41 @@ import { api } from './client'
 
 export type Notification = {
   _id: string
-  userId?: { _id: string; fullName: string }
+  userId: string
+  type: 'bill' | 'maintenance' | 'payment' | 'visitor' | 'message' | 'rental' | 'broadcast' | 'system'
   title: string
-  content: string
-  type: 'system' | 'bill' | 'maintenance' | 'contract' | 'general'
+  message: string
+  link?: string
   isRead: boolean
+  actor?: {
+    userId: string | any
+    fullName: string
+    avatarUrl?: string
+  }
+  reactions: Array<{ userId: string; emoji: string }>
+  metadata?: any
   createdAt: string
 }
 
-/**
- * GET /notifications: BE trả { success: true, data: [ ... ] }.
- * Axios res.data = body → list = res.data.data (lịch sử tất cả thông báo từ DB).
- */
-function parseNotificationList(res: any): Notification[] {
-  const body = res?.data
-  if (Array.isArray(body)) return body
-  const list = body?.data ?? body?.notifications ?? body?.list ?? body?.items ?? body?.result
-  if (Array.isArray(list)) return list
-  return []
-}
-
-export type CreateNotificationPayload = {
-  userId: string
-  title: string
-  content: string
-  type?: 'system' | 'bill' | 'maintenance' | 'contract' | 'general'
-}
-
 export const notificationsApi = {
-  getAll: async (params?: { isRead?: boolean; limit?: number }) => {
-    const query: Record<string, string | number | boolean> = {}
-    if (params?.isRead !== undefined) {
-      query.isRead = params.isRead
-      query.read = params.isRead
-    }
-    if (params?.limit != null) query.limit = params.limit
-    const res = await api.get('/notifications', { params: query })
-    return { ...res, data: parseNotificationList(res) }
-  },
-  create: (data: CreateNotificationPayload) =>
-    api.post<Notification>('/notifications', data),
-  markRead: (id: string) => api.put(`/notifications/${id}/read`),
-  broadcast: (data: { title: string; content: string; type?: string; targetRole?: string; roomId?: string }) =>
-    api.post<Notification>('/notifications/broadcast', data),
-  createForUser: (data: { userId: string; title: string; content: string; type?: Notification['type'] }) =>
-    api.post<Notification>('/notifications', data),
+  getAll: (params: { isRead?: boolean; type?: string; page?: number; limit?: number }) =>
+    api.get<{ success: boolean; data: Notification[]; pagination: any }>('/notifications', { params }),
+  
+  getUnreadCount: () => api.get<{ success: boolean; count: number }>('/notifications/unread-count'),
+  
+  markRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  
+  markAllRead: () => api.patch('/notifications/read-all'),
+  
+  toggleReaction: (id: string, emoji: string) => 
+    api.post(`/notifications/${id}/reaction`, { emoji }),
+  
+  subscribePush: (subscription: any) => 
+    api.post('/push/subscribe', { subscription }),
+  
+  unsubscribePush: (endpoint: string) => 
+    api.delete('/push/unsubscribe', { data: { endpoint } }),
+
+  broadcast: (data: { title: string; content: string; type?: string; targetRole?: string; link?: string; metadata?: any }) =>
+    api.post('/notifications/broadcast', data)
 }

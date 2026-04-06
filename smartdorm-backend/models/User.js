@@ -60,6 +60,11 @@ const userSchema = new mongoose.Schema(
       ref: "Room",
       default: null,
     },
+    // Lưu các subscription cho Push Notification
+    pushSubscriptions: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
   },
   { timestamps: true }
 );

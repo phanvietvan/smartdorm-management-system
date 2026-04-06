@@ -9,6 +9,8 @@ export default function RoomDetail() {
   const [tenant, setTenant] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [searchPhone, setSearchPhone] = useState('')
+  const [assigning, setAssigning] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -30,6 +32,20 @@ export default function RoomDetail() {
       .catch(() => setError('Không tìm thấy phòng'))
       .finally(() => setLoading(false))
   }, [id])
+
+  const handleAssignByPhone = async () => {
+    if (!id || !searchPhone.trim()) return
+    setAssigning(true)
+    try {
+      await usersApi.assignTenant({ roomId: id, phone: searchPhone.trim() })
+      // Refresh
+      window.location.reload()
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Không thể gán phòng')
+    } finally {
+      setAssigning(false)
+    }
+  }
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[40vh]">
@@ -109,6 +125,7 @@ export default function RoomDetail() {
                 { label: 'Khu vực', value: areaName },
                 { label: 'Tầng', value: `Tầng ${room.floor}` },
                 { label: 'Sức chứa', value: `${room.capacity} người` },
+                { label: 'Liên hệ', value: room.contactPhone || 'Chưa có' },
                 { label: 'Tiện nghi', value: 'Tiêu chuẩn' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-slate-50/80 border border-slate-100/80">
@@ -196,10 +213,23 @@ export default function RoomDetail() {
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
               </div>
               <h3 className="rd-value text-slate-600">Phòng trống</h3>
-              <p className="rd-label mt-1 font-medium normal-case text-slate-400">Sẵn sàng cho thuê mới</p>
-              <button type="button" className="mt-5 px-5 py-2.5 bg-indigo-600 text-white font-semibold text-sm rounded-lg hover:bg-indigo-700 transition-colors">
-                Thêm người thuê
-              </button>
+              <p className="rd-label mt-1 font-medium normal-case text-slate-400 mb-4 text-[10px]">Sẵn sàng cho thuê mới</p>
+              <div className="w-full space-y-3 px-2">
+                <input 
+                  placeholder="Nhập SĐT khách..." 
+                  value={searchPhone}
+                  onChange={(e) => setSearchPhone(e.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 shadow-sm transition-all"
+                />
+                <button 
+                  type="button" 
+                  disabled={assigning}
+                  onClick={handleAssignByPhone}
+                  className="w-full px-5 py-3 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100/50 disabled:bg-slate-300"
+                >
+                  {assigning ? 'Đang gán...' : 'Gán qua SĐT'}
+                </button>
+              </div>
             </aside>
           )}
         </div>

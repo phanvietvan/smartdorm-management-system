@@ -18,6 +18,7 @@ import Areas from './pages/Areas'
 import Services from './pages/Services'
 import Visitors from './pages/Visitors'
 import Payments from './pages/Payments'
+import RentalRequestManage from './pages/RentalRequestManage'
 import PendingApproval from './pages/PendingApproval'
 import { useAuth } from './context/AuthContext'
 
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="services" element={<Services />} />
         <Route path="visitors" element={<Visitors />} />
         <Route path="payments" element={<Payments />} />
+        <Route path="rental-requests" element={<RentalRequestManage />} />
         <Route path="pending" element={<PendingApproval />} />
       </Route>
 

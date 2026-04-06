@@ -6,9 +6,11 @@ const maintenanceRequestSchema = new mongoose.Schema(
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     title: { type: String, required: true },
     description: { type: String },
+    category: { type: String }, // VD: Điện, Nước, WiFi...
+    urgency: { type: String }, // VD: Thấp, Bình thường, Cao...
     status: {
       type: String,
-      enum: ["pending", "in_progress", "completed", "cancelled", "closed"],
+      enum: ["pending", "in_progress", "completed", "cancelled", "closed", "reopened"],
       default: "pending",
     },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

@@ -1,78 +1,61 @@
-const mongoose = require("mongoose");
 const Notification = require("../models/Notification");
-const User = require("../models/User");
+const mongoose = require("mongoose");
 
 const notificationController = {
-  // GET /notifications – cho mọi user (admin, tenant, landlord, ...): chỉ trả về thông báo có userId/recipient = user đang đăng nhập
-  getUserNotifications: async (req, res) => {
+  // GET /notifications
+  getAll: async (req, res) => {
     try {
-      const limit = parseInt(req.query.limit) || 20;
-      const isRead = req.query.isRead;
-      const userId = req.user._id instanceof mongoose.Types.ObjectId ? req.user._id : new mongoose.Types.ObjectId(req.user._id);
-      const filter = { userId };
-      if (isRead !== undefined && isRead !== '') {
-        filter.isRead = isRead === 'true';
+      const { isRead, type, page = 1, limit = 20 } = req.query;
+      const filter = { userId: req.user._id };
+
+      if (isRead !== undefined && isRead !== "") {
+        filter.isRead = isRead === "true";
       }
+
+      if (type) {
+        filter.type = type;
+      }
+
+      const total = await Notification.countDocuments(filter);
       const notifications = await Notification.find(filter)
         .sort({ createdAt: -1 })
-        .limit(limit);
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit))
+        .populate("actor.userId", "fullName avatarUrl");
 
       res.status(200).json({
         success: true,
-        data: notifications
+        data: notifications,
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / limit)
+        }
       });
     } catch (error) {
       res.status(500).json({ success: false, message: "Lỗi hệ thống", error: error.message });
     }
   },
 
-  // POST /notifications – tạo thông báo cho một user (admin khi duyệt user, gán phòng, v.v.)
-  createForUser: async (req, res) => {
+  // GET /notifications/unread-count
+  getUnreadCount: async (req, res) => {
     try {
-      const { userId, title, content, type } = req.body;
-      if (!userId || !title || !content) {
-        return res.status(400).json({
-          success: false,
-          message: "Thiếu userId, title hoặc content"
-        });
-      }
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ success: false, message: "Không tìm thấy user" });
-      }
-      const allowedTypes = ['system', 'bill', 'billing', 'maintenance', 'contract', 'general'];
-      const notificationType = type && allowedTypes.includes(type) ? type : 'general';
-      const notification = await Notification.create({
-        userId,
-        title,
-        content,
-        type: notificationType,
-        isRead: false
+      const count = await Notification.countDocuments({ 
+        userId: req.user._id, 
+        isRead: false 
       });
-      const created = await Notification.findById(notification._id).lean();
-      res.status(201).json({
-        success: true,
-        data: {
-          _id: created._id,
-          userId: created.userId,
-          title: created.title,
-          content: created.content,
-          type: created.type,
-          isRead: created.isRead,
-          createdAt: created.createdAt
-        }
-      });
+      res.status(200).json({ success: true, count });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Lỗi khi tạo thông báo", error: error.message });
+      res.status(500).json({ success: false, message: "Lỗi hệ thống", error: error.message });
     }
   },
 
-  // PUT /notifications/:id/read – chỉ user sở hữu thông báo (userId = req.user._id) mới đánh dấu được
+  // PATCH /notifications/:id/read
   markAsRead: async (req, res) => {
     try {
-      const userId = req.user._id instanceof mongoose.Types.ObjectId ? req.user._id : new mongoose.Types.ObjectId(req.user._id);
       const notification = await Notification.findOneAndUpdate(
-        { _id: req.params.id, userId },
+        { _id: req.params.id, userId: req.user._id },
         { isRead: true },
         { new: true }
       );
@@ -81,70 +64,105 @@ const notificationController = {
         return res.status(404).json({ success: false, message: "Không tìm thấy thông báo" });
       }
 
-      res.status(200).json({
-        success: true,
-        data: notification
-      });
+      res.status(200).json({ success: true, data: notification });
     } catch (error) {
       res.status(500).json({ success: false, message: "Lỗi hệ thống", error: error.message });
     }
   },
 
-  // POST /notifications/broadcast (từ tenant với targetRole: 'admin' hoặc 'landlord', hoặc từ admin/manager/landlord)
-  // Đảm bảo: tạo một bản ghi thông báo cho TỪNG user thuộc targetRole, mỗi bản ghi có userId = _id của admin/landlord đó (giống gửi cho từng tenant)
-  // targetRole: admin -> user có role 'admin' hoặc 'manager'; landlord -> 'landlord'; tenant -> 'tenant'; staff -> maintenance_staff, accountant, security
-  // roomId: gửi cho (các) tenant thuộc phòng đó
+  // PATCH /notifications/read-all
+  readAll: async (req, res) => {
+    try {
+      await Notification.updateMany({ userId: req.user._id, isRead: false }, { isRead: true });
+      res.status(200).json({ success: true, message: "Đã đánh dấu tất cả là đã đọc" });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Lỗi hệ thống", error: error.message });
+    }
+  },
+
+  // POST /notifications/:id/reaction
+  toggleReaction: async (req, res) => {
+    try {
+      const { emoji } = req.body;
+      const { id } = req.params;
+      const userId = req.user._id;
+
+      const notification = await Notification.findOne({ _id: id, userId });
+      if (!notification) return res.status(404).json({ message: "Không tìm thấy thông báo" });
+
+      const existingReactionIndex = notification.reactions.findIndex(r => 
+        r.userId.toString() === userId.toString() && r.emoji === emoji
+      );
+
+      if (existingReactionIndex > -1) {
+        // Remove reaction
+        notification.reactions.splice(existingReactionIndex, 1);
+      } else {
+        // Add reaction (or update if user only allows one reaction per emoji type)
+        notification.reactions.push({ userId, emoji });
+      }
+
+      await notification.save();
+      res.json({ success: true, data: notification.reactions });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  // Create (Internal/Admin)
+  create: async (req, res) => {
+    try {
+      const { notifyUser } = require("../utils/notificationService");
+      const { userId, title, message, type, link, metadata } = req.body;
+      
+      const actor = {
+        userId: req.user._id,
+        fullName: req.user.fullName,
+        avatarUrl: req.user.avatarUrl
+      };
+
+      await notifyUser(userId, title, message, type, link, actor, metadata);
+      res.status(201).json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  // Broadcast (Internal/Admin)
   broadcast: async (req, res) => {
     try {
-      const { title, content, type, targetRole, roomId } = req.body;
-      if (!title || !content) {
-        return res.status(400).json({ success: false, message: "Thiếu title hoặc content" });
-      }
-
-      let usersQuery = {};
-      const tr = targetRole ? String(targetRole).toLowerCase().trim() : "";
+      const { notifyByRole, notifyUsers } = require("../utils/notificationService");
+      const { title, content, type, targetRole, roomId, link, metadata } = req.body;
+      
+      const payload = {
+        title,
+        message: content,
+        type: type || 'broadcast',
+        link,
+        actor: {
+          userId: req.user._id,
+          fullName: req.user.fullName,
+          avatarUrl: req.user.avatarUrl
+        },
+        metadata
+      };
 
       if (roomId) {
-        usersQuery.roomId = roomId;
-      } else if (tr === "admin") {
-        // Tìm admin + manager (không phân biệt hoa thường để tránh lỗi dữ liệu)
-        usersQuery.$or = [
-          { role: { $regex: /^admin$/i } },
-          { role: { $regex: /^manager$/i } }
-        ];
-      } else if (tr === "landlord") {
-        usersQuery.role = { $regex: /^landlord$/i };
-      } else if (tr === "tenant") {
-        usersQuery.role = { $regex: /^tenant$/i };
-      } else if (tr === "staff") {
-        usersQuery.role = { $in: ["maintenance_staff", "accountant", "security"] };
-      } else if (!tr) {
-        usersQuery = {};
+        const User = require("../models/User");
+        const users = await User.find({ roomId }).select("_id").lean();
+        await notifyUsers(users.map(u => u._id), payload);
+      } else if (targetRole) {
+        await notifyByRole(targetRole, payload);
       } else {
-        usersQuery.role = { $regex: new RegExp(`^${tr}$`, "i") };
+        // Broadcast to all
+        const User = require("../models/User");
+        const users = await User.find({}).select("_id").lean();
+        await notifyUsers(users.map(u => u._id), payload);
       }
 
-      const users = await User.find(usersQuery).select('_id').lean();
-      // Mỗi admin/landlord/tenant nhận một bản ghi riêng, userId = _id của người nhận → admin thấy trong chuông và trang Thông báo như tenant
-      const notificationType = (type && ["system", "bill", "billing", "maintenance", "contract", "general"].includes(type)) ? type : "general";
-      const notifications = users.map(user => ({
-        userId: user._id instanceof mongoose.Types.ObjectId ? user._id : new mongoose.Types.ObjectId(user._id),
-        title,
-        content,
-        type: notificationType,
-        isRead: false
-      }));
-
-      if (notifications.length > 0) {
-        await Notification.insertMany(notifications);
-      }
-
-      res.status(201).json({
-        success: true,
-        message: `Đã gửi thông báo tới ${notifications.length} người dùng`
-      });
+      res.status(201).json({ success: true, message: "Đã gửi thông báo hàng loạt" });
     } catch (error) {
-      res.status(500).json({ success: false, message: "Lỗi khi gửi thông báo", error: error.message });
+      res.status(500).json({ message: error.message });
     }
   }
 };

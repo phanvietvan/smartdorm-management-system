@@ -36,7 +36,7 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { name, phone, roomId, tenantId, purpose, idCard } = req.body;
+    const { name, phone, roomId, tenantId, purpose, idCard, plateNumber } = req.body;
     if (!name || !roomId || !tenantId) return res.status(400).json({ message: "Thiếu name, roomId hoặc tenantId" });
     const visitor = new Visitor({
       name,
@@ -45,15 +45,33 @@ exports.create = async (req, res) => {
       tenantId,
       purpose,
       idCard,
+      plateNumber,
+      status: "waiting", // Mặc định chờ duyệt
       registeredBy: req.user._id,
     });
     await visitor.save();
-    const populated = await Visitor.findById(visitor._id).populate("roomId", "name").populate("tenantId", "fullName");
-    const tid = visitor.tenantId && visitor.tenantId.toString ? visitor.tenantId.toString() : visitor.tenantId;
-    if (tid) await notifyUser(tid, "Khách vào", `Khách "${name}" đã được đăng ký vào phòng của bạn.`, "general");
-    res.status(201).json(populated);
+    const tid = visitor.tenantId.toString();
+    if (tid) await notifyUser(tid, "Khách đang chờ", `Khách "${name}" đang chờ tại cổng. Vui lòng phản hồi cho phép hay không.`, "general");
+    res.status(201).json(visitor);
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+};
+
+exports.respond = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'allowed' | 'denied'
+    const visitor = await Visitor.findById(id);
+    if (!visitor) return res.status(404).json({ message: "Không tìm thấy khách" });
+    if (visitor.tenantId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Chỉ người thuê mới được phản hồi" });
+    }
+    visitor.status = status;
+    await visitor.save();
+    res.json({ success: true, message: `Đã ${status === 'allowed' ? 'cho phép' : 'từ chối'}`, data: visitor });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -62,11 +80,13 @@ exports.checkOut = async (req, res) => {
     const visitor = await Visitor.findById(req.params.id);
     if (!visitor) return res.status(404).json({ message: "Visitor not found" });
     visitor.checkOutAt = new Date();
+    visitor.status = "checked_out";
     await visitor.save();
-    const tid = visitor.tenantId && visitor.tenantId.toString ? visitor.tenantId.toString() : visitor.tenantId;
-    if (tid) await notifyUser(tid, "Khách đã ra", "Khách đã được ghi nhận ra khỏi khu vực.", "general");
+    const tid = visitor.tenantId.toString();
+    if (tid) await notifyUser(tid, "Khách đã ra", `Khách "${visitor.name}" đã rời khỏi khu vực.`, "general");
     res.json(visitor);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
+

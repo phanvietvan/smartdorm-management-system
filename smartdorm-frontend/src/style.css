@@ -1,13 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", sans-serif;
+  --font-display: "Be Vietnam Pro", sans-serif;
+  
+  /* Luxury Palette from User Mock */
+  --color-primary: #4a3fe2;
+  --color-on-primary: #f4f1ff;
+  --color-primary-container: #9795ff;
+  --color-on-primary-container: #14007e;
+  
+  --color-secondary: #6249b2;
+  --color-on-secondary: #f7f0ff;
+  --color-secondary-container: #d8caff;
+  --color-on-secondary-container: #4e339c;
+  
+  --color-tertiary: #983772;
+  --color-on-tertiary: #ffeff4;
+  --color-tertiary-container: #fd8bca;
+  --color-on-tertiary-container: #610244;
+  
+  --color-surface: #f5f7f9;
+  --color-on-surface: #2c2f31;
+  --color-surface-variant: #d9dde0;
+  --color-on-surface-variant: #595c5e;
+  
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eef1f3;
+  --color-surface-container: #e5e9eb;
+  --color-surface-container-high: #dfe3e6;
+  --color-surface-container-highest: #d9dde0;
+  
+  --color-outline: #747779;
+  --color-outline-variant: #abadaf;
+  
+  --color-error: #b41340;
+  --color-on-error: #ffefef;
+  --color-error-container: #f74b6d;
+  --color-on-error-container: #510017;
 }
 
 :root {
   --background: #f5f7f9;
   --foreground: #2c2f31;
+  --on-surface-variant: #595c5e;
 }
 
 body {
@@ -15,6 +52,24 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.bg-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.font-display {
+  font-family: 'Be Vietnam Pro', sans-serif;
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }

@@ -60,10 +60,16 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ message: "Thiếu email hoặc password" });
-    const user = await User.findOne({ email }).select("+password");
+    
+    // Tìm user và lấy luôn thông tin phòng (bao gồm giá tiền)
+    const user = await User.findOne({ email })
+      .select("+password")
+      .populate("roomId");
+      
     if (!user) return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
     const valid = await user.comparePassword(password);
     if (!valid) return res.status(401).json({ message: "Email hoặc mật khẩu không đúng" });
+    
     const token = generateToken(user);
     res.json({
       token,

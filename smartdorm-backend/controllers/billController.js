@@ -6,25 +6,34 @@ const { notifyUser } = require("../utils/notifyUser");
 
 const filterByUser = (req) => {
   const filter = {};
-  if (req.user.role === ROLES.TENANT) filter.tenantId = req.user._id;
+  if (req.user && req.user.role === ROLES.TENANT) {
+    filter.tenantId = req.user._id;
+  }
   return filter;
 };
 
 exports.getAll = async (req, res) => {
   try {
+    console.log("GET ALL BILLS QUERY:", req.query);
     const filter = filterByUser(req);
     const { month, year, status, roomId } = req.query;
-    if (month) filter.month = parseInt(month);
-    if (year) filter.year = parseInt(year);
-    if (status) filter.status = status;
-    if (roomId) filter.roomId = roomId;
+    
+    if (month && !isNaN(parseInt(month))) filter.month = parseInt(month);
+    if (year && !isNaN(parseInt(year))) filter.year = parseInt(year);
+    if (status && status.trim() !== "") filter.status = status;
+    if (roomId && roomId.trim() !== "" && roomId !== "undefined") filter.roomId = roomId;
+    
+    console.log("BILL FILTER APPLIED:", filter);
+
     const bills = await Bill.find(filter)
       .populate("roomId", "name floor")
       .populate("tenantId", "fullName email phone")
-      .sort({ year: -1, month: -1 });
-    res.json(bills);
+      .sort({ year: -1, month: -1, createdAt: -1 });
+      
+    res.json(bills || []);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("CRITICAL BILL API ERROR:", err);
+    res.status(500).json({ message: "Lỗi máy chủ khi lấy danh sách hóa đơn: " + err.message });
   }
 };
 
@@ -92,7 +101,9 @@ exports.create = async (req, res) => {
         tenantIdForNotif,
         "Hóa đơn mới",
         `Bạn có hóa đơn tháng ${month}/${year}. Tổng: ${totalAmount.toLocaleString("vi-VN")}đ. Vui lòng thanh toán trước hạn.`,
-        "bill"
+        "bill",
+        `/app/bills/${bill._id}`,
+        { userId: req.user._id, fullName: req.user.fullName, avatarUrl: req.user.avatarUrl }
       );
     }
     res.status(201).json(populated);
@@ -129,10 +140,36 @@ exports.update = async (req, res) => {
     await bill.save();
     if (status === "paid") {
       const tenantId = bill.tenantId && bill.tenantId.toString ? bill.tenantId.toString() : bill.tenantId;
-      if (tenantId) await notifyUser(tenantId, "Hóa đơn đã thanh toán", `Hóa đơn tháng ${bill.month}/${bill.year} đã được thanh toán.`, "bill");
+      if (tenantId) await notifyUser(
+        tenantId, 
+        "Hóa đơn đã thanh toán", 
+        `Hóa đơn tháng ${bill.month}/${bill.year} đã được thanh toán.`, 
+        "bill",
+        `/app/bills/${bill._id}`,
+        { userId: req.user._id, fullName: req.user.fullName, avatarUrl: req.user.avatarUrl }
+      );
     }
     res.json(bill);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
+
+exports.dispute = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { note } = req.body;
+    const bill = await Bill.findById(id);
+    if (!bill) return res.status(404).json({ message: "Không tìm thấy hóa đơn" });
+    if (bill.tenantId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Chỉ người thuê mới được khiếu nại hóa đơn của mình" });
+    }
+    bill.status = "disputed";
+    bill.note = note || "Khách khiếu nại hóa đơn này";
+    await bill.save();
+    res.json({ success: true, message: "Đã gửi khiếu nại thành công", data: bill });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
