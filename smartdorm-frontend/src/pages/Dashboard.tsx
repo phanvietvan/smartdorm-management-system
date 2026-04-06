@@ -3,13 +3,14 @@ import { dashboardApi, type DashboardStats, type RevenueReport } from '../api/da
 import { billsApi, type Bill } from '../api/bills'
 import { notificationsApi, type Notification } from '../api/notifications'
 import { useAuth } from '../context/AuthContext'
-import { Bed, Receipt, Banknote, Wrench, Zap, Droplet, Send, X, Megaphone, CheckCircle, Info, Bell, MessageSquare, ShieldCheck } from 'lucide-react'
+import { Bed, Receipt, Banknote, Wrench, Zap, Send, X, Megaphone, CheckCircle, Info } from 'lucide-react'
 import { cn } from '../lib/utils'
-import { formatDistanceToNow } from 'date-fns'
-import { vi } from 'date-fns/locale'
+import NotificationItem from '../components/NotificationItem'
+import { useSocket } from '../hooks/useSocket'
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const { socket } = useSocket()
   const isAdmin = user && ['admin', 'manager', 'accountant', 'landlord'].includes(user.role)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [revenue, setRevenue] = useState<RevenueReport | null>(null)
@@ -30,42 +31,50 @@ export default function Dashboard() {
   const [broadcasting, setBroadcasting] = useState(false)
   const [broadcastSuccess, setBroadcastSuccess] = useState(false)
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true)
-        
-        // Hóa đơn gần đây
-        const billsRes = await billsApi.getAll({ status: '' })
-        if (billsRes && billsRes.data) {
-          const sortedBills = (Array.isArray(billsRes.data) ? billsRes.data : [])
-            .sort((a: any, b: any) => new Date(b.dueDate || 0).getTime() - new Date(a.dueDate || 0).getTime())
-            .slice(0, 4)
-          setRecentBills(sortedBills)
-        }
-
-        // Thông báo gần đây
-        const notifsRes = await notificationsApi.getAll({ limit: 5 })
-        if (notifsRes && notifsRes.data) {
-          setRecentNotifications(notifsRes.data)
-        }
-
-        // Nếu là Admin thì fetch thêm chỉ số hệ thống
-        if (isAdmin) {
-          const statsRes = await dashboardApi.getStats()
-          if (statsRes && statsRes.data) {
-            setStats(statsRes.data)
-          }
-        }
-      } catch (err) {
-        console.error("Dashboard fetch error:", err)
-      } finally {
-        setLoading(false)
+  // Fetch initial data
+  const fetchDashboardData = async () => {
+    try {
+      // Chỉ lấy 3 thông báo gần nhất theo yêu cầu
+      const notifsRes = await notificationsApi.getAll({ limit: 3 })
+      if (notifsRes && notifsRes.data) {
+        setRecentNotifications(notifsRes.data.data || [])
       }
-    }
 
+      const billsRes = await billsApi.getAll({ status: '' })
+      if (billsRes && billsRes.data) {
+        const sortedBills = (Array.isArray(billsRes.data) ? billsRes.data : [])
+          .sort((a: any, b: any) => new Date(b.dueDate || 0).getTime() - new Date(a.dueDate || 0).getTime())
+          .slice(0, 4)
+        setRecentBills(sortedBills)
+      }
+
+      if (isAdmin) {
+        const statsRes = await dashboardApi.getStats()
+        if (statsRes && statsRes.data) {
+          setStats(statsRes.data)
+        }
+      }
+    } catch (err) {
+      console.error("Dashboard fetch error:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchDashboardData()
   }, [isAdmin])
+
+  // Real-time listener for Dashboard list
+  useEffect(() => {
+    if (!socket) return
+    const handler = (newNote: any) => {
+      // Luôn giữ tối đa 3 thông báo mới nhất
+      setRecentNotifications(prev => [newNote, ...prev].slice(0, 3))
+    }
+    socket.on('new_notification', handler)
+    return () => { socket.off('new_notification', handler) }
+  }, [socket])
 
   useEffect(() => {
     if (isAdmin) {
@@ -88,6 +97,15 @@ export default function Dashboard() {
     return new Intl.NumberFormat('vi-VN').format(value)
   }
 
+  const handleMarkRead = async (id: string) => {
+    try {
+      await notificationsApi.markRead(id)
+      setRecentNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n))
+    } catch (err) {
+      console.error('Error marking as read from Dashboard:', err)
+    }
+  }
+
   const handleBroadcastSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!broadcastForm.title || !broadcastForm.content) return
@@ -96,13 +114,6 @@ export default function Dashboard() {
     try {
       await notificationsApi.broadcast(broadcastForm)
       setBroadcastSuccess(true)
-      
-      // Refresh notifications locally
-      const notifsRes = await notificationsApi.getAll({ limit: 5 })
-      if (notifsRes && notifsRes.data) {
-        setRecentNotifications(notifsRes.data)
-      }
-
       setTimeout(() => {
         setIsBroadcastModalOpen(false)
         setBroadcastSuccess(false)
@@ -160,26 +171,6 @@ export default function Dashboard() {
       iconBg: 'bg-[#ffe4e6] text-[#b41340]' 
     }
   ] : []
-
-  const getNotifIcon = (type: string) => {
-    switch (type) {
-      case 'bill': return <Receipt className="w-5 h-5" />
-      case 'maintenance': return <Wrench className="w-5 h-5" />
-      case 'broadcast': return <Megaphone className="w-5 h-5" />
-      case 'system': return <ShieldCheck className="w-5 h-5" />
-      default: return <Bell className="w-5 h-5" />
-    }
-  }
-
-  const getNotifBg = (type: string) => {
-    switch (type) {
-      case 'bill': return 'bg-amber-50 text-amber-600'
-      case 'maintenance': return 'bg-blue-50 text-blue-600'
-      case 'broadcast': return 'bg-primary/10 text-primary'
-      case 'system': return 'bg-slate-100 text-slate-600'
-      default: return 'bg-indigo-50 text-indigo-600'
-    }
-  }
 
   // UI CHO NGƯỜI THUÊ (TENANT)
   if (!isAdmin) {
@@ -259,27 +250,25 @@ export default function Dashboard() {
                 <h3 className="text-lg font-black font-display text-[#2c2f31]">Thông báo mới nhất</h3>
                 <button className="text-primary text-xs font-black uppercase tracking-tighter hover:underline">Xem tất cả</button>
               </div>
-              <div className="p-4 space-y-2">
-                {recentNotifications.length > 0 ? recentNotifications.map((notif) => (
-                  <div key={notif._id} className="flex items-center gap-5 p-5 rounded-2xl hover:bg-slate-50 transition-all duration-300 group">
-                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform", getNotifBg(notif.type))}>
-                      {getNotifIcon(notif.type)}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-[#2c2f31]">{notif.title}</p>
-                      <p className="text-xs text-[#595c5e] mt-1 font-medium line-clamp-1">{notif.message}</p>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                      {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: vi })}
-                    </span>
-                  </div>
+              <div className="divide-y divide-slate-50">
+                {recentNotifications.length > 0 ? recentNotifications.map((notif, idx) => (
+                  <NotificationItem 
+                    key={notif._id} 
+                    note={notif} 
+                    onMarkRead={handleMarkRead}
+                    compact={false}
+                    index={idx}
+                  />
                 )) : (
-                  <div className="py-8 text-center text-slate-400 font-medium text-sm">Chưa có thông báo nào.</div>
+                  <div className="py-16 flex flex-col items-center justify-center text-slate-400 font-bold">
+                    <Megaphone className="w-12 h-12 mb-4 opacity-10" />
+                    <p className="text-xs uppercase tracking-[0.2em] opacity-40">Chưa có thông báo nào.</p>
+                  </div>
                 )}
               </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] overflow-hidden shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50">
+            <div className="bg-white rounded-[2rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50">
               <div className="px-8 py-6 flex justify-between items-center border-b border-slate-50/50">
                 <h3 className="text-lg font-black font-display text-[#2c2f31]">Lịch sử giao dịch</h3>
               </div>
@@ -479,7 +468,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center gap-5 bg-white/10 p-5 rounded-2xl backdrop-blur-xl border border-white/5">
                   <div className="p-3 bg-white/20 rounded-xl">
-                    <Bell className="w-6 h-6" />
+                    <Megaphone className="w-6 h-6" />
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Phạm vi</p>
