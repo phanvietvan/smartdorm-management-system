@@ -19,7 +19,7 @@ export type MaintenanceRequest = {
 }
 
 export const maintenanceApi = {
-  getAll: (params?: { status?: string; roomId?: string }) =>
+  getAll: (params?: { status?: string; roomId?: string; tenantId?: string }) =>
     api.get<MaintenanceRequest[]>('/maintenance', { params }),
   getById: (id: string) => api.get<MaintenanceRequest>(`/maintenance/${id}`),
   create: (data: { roomId: string; title: string; description?: string; category?: string; urgency?: string }) =>

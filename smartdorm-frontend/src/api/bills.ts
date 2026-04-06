@@ -33,7 +33,7 @@ type CreateBillPayload = {
 
 /** POST /bills: BE cần roomId, tenantId, month, year; BE tự gửi thông báo "Hóa đơn mới" cho tenantId. Gửi thêm prevElec/currElec nếu BE dùng tên đó. */
 export const billsApi = {
-  getAll: (params?: { month?: number; year?: number; status?: string; roomId?: string }) =>
+  getAll: (params?: { month?: number; year?: number; status?: string; roomId?: string; tenantId?: string }) =>
     api.get<Bill[]>('/bills', { params }),
   getById: (id: string) => api.get<Bill>(`/bills/${id}`),
   create: (data: CreateBillPayload) => {

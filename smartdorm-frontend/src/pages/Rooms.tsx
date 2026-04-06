@@ -49,6 +49,10 @@ export default function Rooms() {
   const [roommates, setRoommates] = useState<User[]>([])
   const [maintenanceHistory, setMaintenanceHistory] = useState<any[]>([])
 
+  const [showVisitorModal, setShowVisitorModal] = useState(false)
+  const [visitorForm, setVisitorForm] = useState({ name: '', phone: '', purpose: '', idCard: '', plateNumber: '' })
+  const [registeringVisitor, setRegisteringVisitor] = useState(false)
+
   useEffect(() => {
     if (showRentalModal && user) {
       setRentalForm({
@@ -59,6 +63,28 @@ export default function Rooms() {
       })
     }
   }, [showRentalModal, user])
+
+  const handleVisitorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!myRoomId || !user?._id) return
+    setRegisteringVisitor(true)
+    try {
+      // Giả định visitorsApi đã được định nghĩa trong project
+      const { visitorsApi } = await import('../api/visitors')
+      await visitorsApi.create({
+        ...visitorForm,
+        roomId: myRoomId,
+        tenantId: user._id
+      })
+      alert('Đăng ký khách thành công! Vui lòng nhắc khách mang theo giấy tờ tùy thân.')
+      setShowVisitorModal(false)
+      setVisitorForm({ name: '', phone: '', purpose: '', idCard: '', plateNumber: '' })
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Có lỗi xảy ra khi đăng ký khách')
+    } finally {
+      setRegisteringVisitor(false)
+    }
+  }
 
   const handleRentalSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -495,11 +521,14 @@ export default function Rooms() {
                         Mở Khóa Kỹ Thuật Số
                       </button>
                       <div className="grid grid-cols-2 gap-3">
-                        <button className="bg-surface-container-lowest text-on-surface py-3 rounded-xl font-semibold text-xs flex flex-col items-center justify-center gap-1 hover:bg-surface-container-high transition-colors">
+                        <Link to="/app/services" className="bg-surface-container-lowest text-on-surface py-3 rounded-xl font-semibold text-xs flex flex-col items-center justify-center gap-1 hover:bg-surface-container-high transition-colors">
                           <span className="material-symbols-outlined text-primary text-xl">manage_accounts</span>
                           Yêu cầu sửa chữa
-                        </button>
-                        <button className="bg-surface-container-lowest text-on-surface py-3 rounded-xl font-semibold text-xs flex flex-col items-center justify-center gap-1 hover:bg-surface-container-high transition-colors">
+                        </Link>
+                        <button 
+                          onClick={() => setShowVisitorModal(true)}
+                          className="bg-surface-container-lowest text-on-surface py-3 rounded-xl font-semibold text-xs flex flex-col items-center justify-center gap-1 hover:bg-surface-container-high transition-colors"
+                        >
                           <span className="material-symbols-outlined text-primary text-xl">person_add</span>
                           Đăng ký khách
                         </button>
@@ -751,6 +780,91 @@ export default function Rooms() {
             <button className="fixed bottom-12 right-12 w-16 h-16 bg-primary text-on-primary rounded-full shadow-[0px_15px_40px_rgba(74,63,226,0.3)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
               <span className="material-symbols-outlined text-3xl">support_agent</span>
             </button>
+
+            {/* Visitor Registration Modal */}
+            {showVisitorModal && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="bg-white w-full max-w-lg rounded-[2rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+                  <div className="bg-primary/5 p-8 border-b border-primary/10">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-2xl font-black text-on-surface tracking-tight">Đăng ký khách đến</h2>
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mt-1">Ghi nhận thông tin khách lưu trú tạm thời</p>
+                      </div>
+                      <button onClick={() => setShowVisitorModal(false)} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary/10 text-on-surface-variant transition-colors">
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <form onSubmit={handleVisitorSubmit} className="p-8 space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Họ tên khách *</label>
+                        <input 
+                          type="text" required value={visitorForm.name} 
+                          onChange={e => setVisitorForm({...visitorForm, name: e.target.value})}
+                          placeholder="Nguyễn Văn A"
+                          className="w-full px-5 py-3.5 bg-surface-container-low border border-outline-variant/10 rounded-2xl font-semibold text-on-surface outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Số điện thoại</label>
+                        <input 
+                          type="tel" value={visitorForm.phone} 
+                          onChange={e => setVisitorForm({...visitorForm, phone: e.target.value})}
+                          placeholder="09xxx..."
+                          className="w-full px-5 py-3.5 bg-surface-container-low border border-outline-variant/10 rounded-2xl font-semibold text-on-surface outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Số CMND/CCCD</label>
+                        <input 
+                          type="text" value={visitorForm.idCard} 
+                          onChange={e => setVisitorForm({...visitorForm, idCard: e.target.value})}
+                          placeholder="123456789..."
+                          className="w-full px-5 py-3.5 bg-surface-container-low border border-outline-variant/10 rounded-2xl font-semibold text-on-surface outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Biển số xe (nếu có)</label>
+                        <input 
+                          type="text" value={visitorForm.plateNumber} 
+                          onChange={e => setVisitorForm({...visitorForm, plateNumber: e.target.value})}
+                          placeholder="59X1-XXXXX"
+                          className="w-full px-5 py-3.5 bg-surface-container-low border border-outline-variant/10 rounded-2xl font-semibold text-on-surface outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest ml-1">Lý do/Ghi chú</label>
+                      <textarea 
+                        rows={3} value={visitorForm.purpose} 
+                        onChange={e => setVisitorForm({...visitorForm, purpose: e.target.value})}
+                        placeholder="VD: Qua chơi với bạn, ở lại qua đêm..."
+                        className="w-full px-5 py-3.5 bg-surface-container-low border border-outline-variant/10 rounded-2xl font-semibold text-on-surface outline-none focus:ring-4 focus:ring-primary/5 transition-all resize-none"
+                      />
+                    </div>
+                    
+                    <div className="pt-4 flex gap-3">
+                      <button 
+                        type="button" onClick={() => setShowVisitorModal(false)}
+                        className="flex-1 py-4 rounded-2xl font-bold text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                      >
+                        Hủy
+                      </button>
+                      <button 
+                        type="submit" disabled={registeringVisitor}
+                        className="flex-[2] bg-primary text-on-primary py-4 rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all disabled:opacity-50"
+                      >
+                        {registeringVisitor ? 'Đang xử lý...' : 'Xác nhận Đăng ký'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         ) : isGuest ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">

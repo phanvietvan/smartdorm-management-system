@@ -21,13 +21,13 @@ export default function Payments() {
   const isTenant = user?.role === 'tenant'
 
   const load = () => {
-    paymentsApi.getAll().then((r) => setPayments(r.data)).catch(() => setError('Không thể tải lịch sử thanh toán'))
+    paymentsApi.getAll().then((r) => setPayments(r.data.data.payments)).catch(() => setError('Không thể tải lịch sử thanh toán'))
     if (isTenant) billsApi.getAll({ status: 'pending' }).then((r) => setBills(r.data)).catch(() => {})
   }
 
   useEffect(() => {
     setLoading(true)
-    paymentsApi.getAll().then((r) => setPayments(r.data)).catch(() => setError('Không thể tải lịch sử thanh toán')).finally(() => setLoading(false))
+    paymentsApi.getAll().then((r) => setPayments(r.data.data.payments)).catch(() => setError('Không thể tải lịch sử thanh toán')).finally(() => setLoading(false))
     if (isTenant) billsApi.getAll({ status: 'pending' }).then((r) => setBills(r.data)).catch(() => {})
   }, [isTenant])
 

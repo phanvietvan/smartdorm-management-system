@@ -127,6 +127,8 @@ const ROLE_PERMISSIONS = {
     PERMISSIONS.PAYMENTS_MAKE,
     PERMISSIONS.MAINTENANCE_CREATE,
     PERMISSIONS.MESSAGE_SEND,
+    PERMISSIONS.VISITOR_CREATE, // Cho phép cư dân đăng ký khách
+    PERMISSIONS.VISITOR_VIEW,   // Cho phép cư dân xem lại lịch sử khách của mình
   ],
 
   [ROLES.MAINTENANCE_STAFF]: [

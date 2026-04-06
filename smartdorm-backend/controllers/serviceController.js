@@ -1,6 +1,6 @@
 const Service = require("../models/Service");
 const User = require("../models/User");
-const { notifyUser } = require("../utils/notifyUser");
+const { notifyUser, notifyByRole } = require("../utils/notificationService");
 
 const serviceController = {
   // GET /services

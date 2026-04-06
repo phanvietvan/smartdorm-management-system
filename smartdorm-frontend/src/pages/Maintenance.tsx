@@ -5,6 +5,7 @@ import { notificationsApi } from '../api/notifications'
 import { roomsApi, type Room } from '../api/rooms'
 import { useAuth } from '../context/AuthContext'
 import SuccessScreen from '../components/SuccessScreen'
+import { useSocket } from '../hooks/useSocket'
 
 export default function Maintenance() {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([])
@@ -18,6 +19,7 @@ export default function Maintenance() {
 
   const { user } = useAuth()
   const isTenant = user?.role === 'tenant'
+  const { socket } = useSocket()
 
   const load = () => Promise.all([
     maintenanceApi.getAll().then((r) => setRequests(r.data)).catch(() => setError('Không thể tải danh sách yêu cầu sửa chữa')),
@@ -27,6 +29,18 @@ export default function Maintenance() {
   useEffect(() => {
     load().finally(() => setLoading(false))
   }, [])
+
+  // Real-time listener
+  useEffect(() => {
+    if (!socket) return
+    const handler = (newNote: any) => {
+      if (newNote.type === 'maintenance') {
+        load()
+      }
+    }
+    socket.on('new_notification', handler)
+    return () => { socket.off('new_notification', handler) }
+  }, [socket])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()

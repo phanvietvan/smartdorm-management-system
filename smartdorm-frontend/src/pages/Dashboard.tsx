@@ -3,14 +3,17 @@ import { dashboardApi, type DashboardStats, type RevenueReport } from '../api/da
 import { billsApi, type Bill } from '../api/bills'
 import { notificationsApi, type Notification } from '../api/notifications'
 import { useAuth } from '../context/AuthContext'
-import { Bed, Receipt, Banknote, Wrench, Zap, Send, X, Megaphone, CheckCircle, Info } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bed, Receipt, Banknote, Wrench, Zap, Send, X, Megaphone, CheckCircle, Info, Sun, Cloud, CloudRain, CloudLightning, Droplets, Thermometer } from 'lucide-react'
 import { cn } from '../lib/utils'
 import NotificationItem from '../components/NotificationItem'
 import { useSocket } from '../hooks/useSocket'
+import { weatherApi } from '../api/weather'
 
 export default function Dashboard() {
   const { user } = useAuth()
   const { socket } = useSocket()
+  const navigate = useNavigate()
   const isAdmin = user && ['admin', 'manager', 'accountant', 'landlord'].includes(user.role)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [revenue, setRevenue] = useState<RevenueReport | null>(null)
@@ -19,6 +22,12 @@ export default function Dashboard() {
   
   const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+  const [weatherData, setWeatherData] = useState<{
+    temp: number,
+    code: number,
+    humidity: number,
+    apparentTemp: number
+  } | null>(null)
 
   // Broadcast Modal State
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false)
@@ -63,6 +72,27 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData()
+    // Lấy thời tiết TP.HCM khi vào Dashboard & cập nhật mỗi 30s để đảm bảo "Real-time"
+    const fetchWeather = () => {
+      weatherApi.getCurrentWeather()
+        .then(res => {
+          if (res.data?.current) {
+            const c = res.data.current
+            setWeatherData({
+              temp: c.temperature_2m,
+              code: c.weather_code,
+              humidity: c.relative_humidity_2m,
+              apparentTemp: c.apparent_temperature
+            })
+          }
+        })
+        .catch(err => console.error("Weather fetch error:", err))
+    }
+
+    fetchWeather()
+    const weatherInterval = setInterval(fetchWeather, 30000) // 30 giây cập nhật 1 lần
+
+    return () => clearInterval(weatherInterval)
   }, [isAdmin])
 
   // Real-time listener for Dashboard list
@@ -176,6 +206,18 @@ export default function Dashboard() {
   if (!isAdmin) {
     const userRoom = (user as any)?.roomId
     const pendingBillsCount = recentBills.filter(b => b.status === 'unpaid' || b.status === 'pending').length
+
+    const getWeatherInfo = (code: number) => {
+        if (code === 0) return { label: 'Trời nắng rạng rỡ', icon: Sun, color: 'bg-amber-400' }
+        if (code <= 3) return { label: 'Trời nhiều mây', icon: Cloud, color: 'bg-blue-300' }
+        if (code >= 51 && code <= 67) return { label: 'Mưa vừa/nhẹ', icon: CloudRain, color: 'bg-indigo-400' }
+        if (code >= 80) return { label: 'Mưa rào nặng hạt', icon: CloudRain, color: 'bg-blue-600' }
+        if (code >= 95) return { label: 'Dông & Sấm sét', icon: CloudLightning, color: 'bg-purple-600' }
+        return { label: 'Thời tiết ổn định', icon: Sun, color: 'bg-amber-400' }
+    }
+    
+    const weather = weatherData ? getWeatherInfo(weatherData.code) : { label: 'Đang cập nhật...', icon: Zap, color: 'bg-slate-200' }
+    const WeatherIcon = weather.icon
 
     return (
       <main className="w-full max-w-7xl mx-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -347,15 +389,36 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-5">
-                      <div className="p-4 bg-amber-400 text-white rounded-2xl shadow-lg shadow-amber-100">
-                        <Zap className="w-6 h-6" />
+                      <div className={cn("p-4 text-white rounded-2xl shadow-lg transition-all duration-1000", weather.color)}>
+                        <WeatherIcon className="w-6 h-6" />
                       </div>
                       <div>
-                        <p className="text-[10px] text-[#595c5e] font-black uppercase tracking-widest opacity-60">Nhiệt độ</p>
-                        <p className="text-2xl font-black font-display text-[#2c2f31]">24°C</p>
+                        <p className="text-[10px] text-[#595c5e] font-black uppercase tracking-widest opacity-60">{weather.label}</p>
+                        <p className="text-2xl font-black font-display text-[#2c2f31]">
+                          {weatherData ? `${Math.round(weatherData.temp)}°C` : '--°C'}
+                        </p>
                       </div>
                     </div>
                   </div>
+
+                  {weatherData && (
+                    <div className="grid grid-cols-2 gap-4 mt-6 animate-in fade-in slide-in-from-top-2 duration-700">
+                        <div className="bg-white/40 p-4 rounded-2xl border border-white/20">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Droplets className="w-3 h-3 text-blue-500" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Độ ẩm</span>
+                            </div>
+                            <p className="font-black text-slate-700 tabular-nums">{weatherData.humidity}%</p>
+                        </div>
+                        <div className="bg-white/40 p-4 rounded-2xl border border-white/20">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Thermometer className="w-3 h-3 text-rose-500" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cảm giác</span>
+                            </div>
+                            <p className="font-black text-slate-700 tabular-nums">{Math.round(weatherData.apparentTemp)}°C</p>
+                        </div>
+                    </div>
+                  )}
                 </div>
                 
                 <button className="w-full mt-12 py-5 bg-primary text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-indigo-100 hover:brightness-110 active:scale-95 transition-all">
@@ -412,134 +475,130 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 relative overflow-hidden">
-           <div className="flex justify-between items-center mb-10 relative z-10">
-             <div>
-              <h3 className="text-xl font-black text-[#2c2f31] font-display uppercase tracking-tight">Thống kê doanh thu</h3>
-              <p className="text-sm text-[#595c5e] font-medium mt-1">Năm tài chính {selectedYear}</p>
-             </div>
-             <select 
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="bg-slate-50 border-none rounded-2xl text-xs font-black py-3 px-6 outline-none focus:ring-2 focus:ring-primary/20 appearance-none shadow-sm cursor-pointer"
-             >
-               <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
-               <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
-             </select>
-           </div>
-           
-           <div className="h-[320px] w-full flex items-end justify-between gap-4 pt-12 relative z-10">
-             {chartData.map((m: any, idx: number) => (
-               <div key={idx} className="flex-1 flex flex-col items-center gap-4 group relative h-full justify-end">
-                  <div className="absolute -top-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100 bg-[#2c2f31] text-white px-3 py-1.5 rounded-xl text-[10px] font-black whitespace-nowrap z-20 shadow-xl">
-                    {formatCurrency(m.value)}đ
-                  </div>
-                  <div 
-                    className="w-full bg-indigo-50/50 rounded-2xl group-hover:bg-primary transition-all duration-500 relative overflow-hidden cursor-pointer" 
-                    style={{ height: `${revenue && revenue.total > 0 ? (m.value / Math.max(...chartData.map((x: any) => x.value), 1)) * 100 : 0}%`, minHeight: '8px' }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  </div>
-                  <span className="text-[10px] font-black text-[#595c5e] uppercase tracking-widest">{m.name}</span>
-               </div>
-             ))}
-           </div>
-           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-[100px] pointer-events-none"></div>
-        </div>
-
-        <div className="bg-primary p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
-            <Megaphone className="w-48 h-48 rotate-[15deg]" />
-          </div>
-          <div className="relative z-10 h-full flex flex-col justify-between">
-            <div>
-              <h3 className="text-2xl font-black mb-3 font-display leading-tight tracking-tighter">Phát sóng thông báo</h3>
-              <p className="text-white/70 text-sm mb-10 font-medium">Gửi thông báo quan trọng đến toàn bộ cư dân hoặc nhóm cụ thể.</p>
-              
-              <div className="space-y-4">
-                <div className="flex items-center gap-5 bg-white/10 p-5 rounded-2xl backdrop-blur-xl border border-white/5">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <Zap className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Loại tin</p>
-                    <p className="text-lg font-bold">Hệ thống & Sự kiện</p>
-                  </div>
+        <div className="lg:col-span-2 space-y-8">
+           {/* Thống kê doanh thu */}
+           <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 relative overflow-hidden">
+              <div className="flex justify-between items-center mb-10 relative z-10">
+                <div>
+                  <h3 className="text-xl font-black text-[#2c2f31] font-display uppercase tracking-tight">Thống kê doanh thu</h3>
+                  <p className="text-sm text-[#595c5e] font-medium mt-1">Năm tài chính {selectedYear}</p>
                 </div>
-                <div className="flex items-center gap-5 bg-white/10 p-5 rounded-2xl backdrop-blur-xl border border-white/5">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <Megaphone className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Phạm vi</p>
-                    <p className="text-lg font-bold uppercase tracking-tight">Tất cả cư dân</p>
-                  </div>
-                </div>
+                <select 
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="bg-slate-50 border-none rounded-2xl text-xs font-black py-3 px-6 outline-none focus:ring-2 focus:ring-primary/20 appearance-none shadow-sm cursor-pointer"
+                >
+                  <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
+                  <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
+                </select>
               </div>
-            </div>
-            
-            <button 
-              onClick={() => setIsBroadcastModalOpen(true)}
-              className="w-full mt-10 py-5 bg-white text-primary font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-black hover:text-white transition-all shadow-xl shadow-indigo-900/20 active:scale-[0.98]"
-            >
-              Soạn thông báo ngay
-            </button>
-          </div>
+              
+              <div className="h-[320px] w-full flex items-end justify-between gap-4 pt-12 relative z-10">
+                {chartData.map((m: any, idx: number) => (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-4 group relative h-full justify-end">
+                      <div className="absolute -top-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100 bg-[#2c2f31] text-white px-3 py-1.5 rounded-xl text-[10px] font-black whitespace-nowrap z-20 shadow-xl">
+                        {formatCurrency(m.value)}đ
+                      </div>
+                      <div 
+                        className="w-full bg-indigo-50/50 rounded-2xl group-hover:bg-primary transition-all duration-500 relative overflow-hidden cursor-pointer" 
+                        style={{ height: `${revenue && revenue.total > 0 ? (m.value / Math.max(...chartData.map((x: any) => x.value), 1)) * 100 : 0}%`, minHeight: '8px' }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-t from-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      </div>
+                      <span className="text-[10px] font-black text-[#595c5e] uppercase tracking-widest">{m.name}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-[100px] pointer-events-none"></div>
+           </div>
+
+           {/* Recent Bills Table */}
+           <div className="bg-white rounded-[2.5rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 overflow-hidden">
+             <div className="px-10 py-8 flex justify-between items-center border-b border-slate-50 text-slate-800">
+               <h3 className="text-xl font-black font-display tracking-tight leading-none">Hóa đơn cần xác nhận</h3>
+               <button onClick={() => navigate('/app/bills')} className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline px-4 py-2 bg-indigo-50 rounded-xl transition-all">Toàn bộ hồ sơ →</button>
+             </div>
+             <div className="overflow-x-auto">
+               <table className="w-full text-left">
+                 <thead>
+                   <tr className="text-[9px] text-[#595c5e] uppercase tracking-[0.2em] font-black border-b border-slate-50 bg-slate-50/30">
+                     <th className="px-10 py-6">Vị trí phòng</th>
+                     <th className="px-10 py-6 text-right">Tổng giá trị</th>
+                     <th className="px-10 py-6 text-center">Tình trạng</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-50">
+                   {recentBills.length > 0 ? (
+                     recentBills.map((bill) => (
+                       <tr key={bill._id} className="hover:bg-slate-50/50 transition-all group">
+                         <td className="px-10 py-6">
+                           <span className="text-[15px] font-black text-[#2c2f31] font-display group-hover:text-primary transition-colors">{(bill.roomId as any)?.name}</span>
+                         </td>
+                         <td className="px-10 py-6 text-right font-black text-primary font-display text-[15px] tracking-tighter">{formatCurrency(bill.totalAmount)} đ</td>
+                         <td className="px-10 py-6 text-center">
+                           <span className={cn(
+                             "px-3 py-1 text-[8px] font-black rounded-full uppercase tracking-widest inline-block border",
+                             bill.status === 'paid' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-amber-50 text-amber-600 border-amber-100"
+                           )}>
+                             {bill.status === 'paid' ? 'PAID' : 'PENDING'}
+                           </span>
+                         </td>
+                       </tr>
+                     ))
+                   ) : (
+                     <tr>
+                       <td colSpan={3} className="px-10 py-16 text-center text-[#595c5e] font-display italic text-sm">Chưa ghi nhận dữ liệu trong kỳ.</td>
+                     </tr>
+                   )}
+                 </tbody>
+               </table>
+             </div>
+           </div>
         </div>
 
-        <div className="lg:col-span-3 bg-white rounded-[2.5rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 overflow-hidden">
-          <div className="px-10 py-8 flex justify-between items-center border-b border-slate-50">
-            <h3 className="text-xl font-black text-[#2c2f31] font-display">Danh sách hóa đơn mới nhất</h3>
-            <button className="text-primary text-xs font-black uppercase tracking-widest hover:underline px-4 py-2 bg-indigo-50 rounded-xl transition-all">Toàn bộ hồ sơ →</button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] text-[#595c5e] uppercase tracking-[0.2em] font-black border-b border-slate-50 bg-slate-50/30">
-                  <th className="px-10 py-6">Vị trí phòng</th>
-                  <th className="px-10 py-6">Thông tin cư dân</th>
-                  <th className="px-10 py-6">Kỳ thanh toán</th>
-                  <th className="px-10 py-6 text-right">Tổng giá trị</th>
-                  <th className="px-10 py-6 text-center">Tình trạng</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {recentBills.length > 0 ? (
-                  recentBills.map((bill) => (
-                    <tr key={bill._id} className="hover:bg-slate-50/50 transition-all group">
-                      <td className="px-10 py-6">
-                        <span className="text-base font-black text-[#2c2f31] font-display group-hover:text-primary transition-colors">{(bill.roomId as any)?.name}</span>
-                      </td>
-                      <td className="px-10 py-6">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-[#2c2f31]">{(bill.tenantId as any)?.fullName}</span>
-                          <span className="text-[10px] text-[#595c5e] font-bold mt-0.5 opacity-60">{(bill.tenantId as any)?.phone}</span>
-                        </div>
-                      </td>
-                      <td className="px-10 py-6 text-xs text-[#595c5e] font-black uppercase tracking-widest leading-none">
-                        {bill.dueDate ? `Tháng ${bill.month} / ${bill.year}` : 'N/A'}
-                      </td>
-                      <td className="px-10 py-6 text-right font-black text-primary font-display text-lg tracking-tighter">{formatCurrency(bill.totalAmount)} đ</td>
-                      <td className="px-10 py-6 text-center">
-                        <span className={cn(
-                          "px-4 py-1.5 text-[9px] font-black rounded-full uppercase tracking-widest inline-block",
-                          bill.status === 'paid' ? "bg-emerald-100 text-emerald-700" : 
-                          bill.status === 'pending' ? "bg-amber-100 text-amber-700" : 
-                          "bg-red-100 text-red-700"
-                        )}>
-                          {bill.status === 'paid' ? 'Đã thanh toán' : 'Chờ xác nhận'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-10 py-16 text-center text-[#595c5e] italic font-medium text-sm">Hệ thống chưa ghi nhận hóa đơn nào trong kỳ này.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-8">
+           {/* Latest Notifications Panel (Admin) */}
+           <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50">
+             <div className="px-8 py-6 flex justify-between items-center border-b border-slate-50/50 bg-slate-50/20">
+               <h3 className="text-lg font-black text-[#2c2f31] font-display leading-none">Thông báo mới nhất</h3>
+               <button onClick={() => navigate('/app/notifications')} className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline px-3 py-1.5 bg-white rounded-xl shadow-sm border border-slate-50 whitespace-nowrap">Tất cả</button>
+             </div>
+             <div className="divide-y divide-slate-50">
+               {recentNotifications.length > 0 ? recentNotifications.map((notif, idx) => (
+                 <NotificationItem 
+                   key={notif._id} 
+                   note={notif} 
+                   onMarkRead={handleMarkRead}
+                   compact={true}
+                   index={idx}
+                 />
+               )) : (
+                 <div className="py-16 flex flex-col items-center justify-center text-slate-400 font-bold">
+                   <Megaphone className="w-12 h-12 mb-4 opacity-10" />
+                   <p className="text-xs uppercase tracking-[0.2em] opacity-40">Hộp thư rỗng.</p>
+                 </div>
+               )}
+             </div>
+           </div>
+
+           {/* Phát sóng thông báo */}
+           <div className="bg-primary p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group h-fit">
+             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
+               <Megaphone className="w-48 h-48 rotate-[15deg]" />
+             </div>
+             <div className="relative z-10 flex flex-col gap-6">
+               <div>
+                 <h3 className="text-2xl font-black mb-1.5 font-display leading-tight tracking-tighter">Phát sóng thông báo</h3>
+                 <p className="text-white/70 text-sm font-medium">Gửi thông báo nhanh đến cư dân.</p>
+               </div>
+               <button 
+                 onClick={() => setIsBroadcastModalOpen(true)}
+                 className="w-full py-4 bg-white text-primary font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-900 hover:text-white transition-all shadow-xl shadow-indigo-900/20 active:scale-[0.98]"
+               >
+                 Soạn thông báo ngay
+               </button>
+             </div>
+           </div>
         </div>
       </div>
 

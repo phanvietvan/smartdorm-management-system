@@ -2,7 +2,7 @@ const RentalRequest = require("../models/RentalRequest");
 const User = require("../models/User");
 const Room = require("../models/Room");
 const { ROLES } = require("../config/roles");
-const { notifyUser } = require("../utils/notifyUser");
+const { notifyUser, notifyByRole } = require("../utils/notificationService");
 const crypto = require("crypto");
 
 exports.getAll = async (req, res) => {

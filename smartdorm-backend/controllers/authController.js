@@ -45,6 +45,16 @@ exports.register = async (req, res) => {
       isActive: true,
     });
     await user.save();
+    
+    // Thông báo cho admin về người dùng mới đăng ký
+    const { notifyByRole } = require("../utils/notificationService");
+    notifyByRole(ROLES.ADMIN, {
+      title: "Người dùng mới đăng ký",
+      message: `${fullName} vừa đăng ký tài khoản mới trên hệ thống.`,
+      type: "system",
+      link: "/app/users"
+    }).catch(e => console.error("Admin registration notification error:", e));
+
     const token = generateToken(user);
     res.status(201).json({
       message: "Đăng ký thành công",

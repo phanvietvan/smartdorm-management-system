@@ -3,9 +3,17 @@ import { visitorsApi, type Visitor } from '../api/visitors'
 import { roomsApi, type Room } from '../api/rooms'
 import { usersApi, type User } from '../api/users'
 import { useAuth } from '../context/AuthContext'
+import { useSocket } from '../hooks/useSocket'
+import { 
+  Eye, X, Phone, User as UserIcon, MapPin, 
+  Clock, FileText, Megaphone,
+  ShieldCheck, Car
+} from 'lucide-react'
+import { cn } from '../lib/utils'
 
 export default function Visitors() {
   const { user } = useAuth()
+  const { socket } = useSocket()
   const isAdminOrSecurity = user && ['admin', 'manager', 'landlord', 'security'].includes(user.role)
 
   const [visitors, setVisitors] = useState<Visitor[]>([])
@@ -15,7 +23,8 @@ export default function Visitors() {
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ name: '', phone: '', roomId: '', tenantId: '', purpose: '' })
+  const [form, setForm] = useState({ name: '', phone: '', roomId: '', tenantId: '', purpose: '', plateNumber: '' })
+  const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null)
 
   const load = () => {
     visitorsApi.getAll().then((r) => setVisitors(r.data)).catch(() => setError('Không thể tải dữ liệu khách ra vào'))
@@ -30,6 +39,16 @@ export default function Visitors() {
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    if (!socket) return
+    socket.on('new_notification', (notif: any) => {
+      if (notif.type === 'visitor') {
+        load()
+      }
+    })
+    return () => { socket.off('new_notification') }
+  }, [socket])
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
@@ -38,7 +57,7 @@ export default function Visitors() {
       .then(() => { 
         load(); 
         setShowForm(false); 
-        setForm({ name: '', phone: '', roomId: '', tenantId: '', purpose: '' }) 
+        setForm({ name: '', phone: '', roomId: '', tenantId: '', purpose: '', plateNumber: '' }) 
       })
       .catch((err) => setError(err.response?.data?.message || 'Lỗi đăng ký khách mới'))
       .finally(() => setSubmitting(false))
@@ -60,8 +79,8 @@ export default function Visitors() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Sổ đăng ký khách vào ra</h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">
+          <h1 className="text-3xl font-black text-[#2c2f31] tracking-tight font-display">Sổ đăng ký khách vào ra</h1>
+          <p className="text-[#595c5e] font-medium mt-1">
             Ghi chép và theo dõi khách đến thăm để đảm bảo an ninh tòa nhà.
           </p>
         </div>
@@ -71,16 +90,19 @@ export default function Visitors() {
               setShowForm(!showForm)
               setError('')
             }}
-             className={`px-4 py-2.5 text-white font-semibold rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2 ${showForm ? 'bg-slate-400 hover:bg-slate-500' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'}`}
+             className={cn(
+               "px-6 py-3 text-white font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest",
+               showForm ? "bg-slate-800 hover:bg-black" : "bg-primary hover:bg-indigo-700 shadow-indigo-200 active:scale-95"
+             )}
           >
             {showForm ? (
               <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <X className="w-4 h-4" />
                 Hủy bỏ
               </>
             ) : (
               <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                <ShieldCheck className="w-4 h-4" />
                 Đăng ký khách mới
               </>
             )}
@@ -89,48 +111,58 @@ export default function Visitors() {
       </div>
 
       {error && !showForm && (
-        <div className="p-4 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 font-medium flex items-center gap-3">
-          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100 font-bold flex items-center gap-3 animate-in slide-in-from-top-2">
+          <Megaphone className="w-5 h-5 flex-shrink-0" />
           {error}
         </div>
       )}
 
       {/* Check-in Form */}
       {showForm && isAdminOrSecurity && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 transform origin-top transition-all">
-          <h2 className="text-lg font-bold text-slate-800 mb-5 pb-4 border-b border-slate-100">Thông tin khách đến thăm</h2>
+        <div className="bg-white rounded-[2.5rem] p-8 shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 transform origin-top animate-in zoom-in-95 duration-200">
+          <h2 className="text-xl font-black text-[#2c2f31] mb-6 pb-4 border-b border-slate-50 font-display">Thông tin khách đến thăm</h2>
           
-          {error && <div className="p-3 mb-5 bg-rose-50 text-rose-600 rounded-lg text-sm font-medium border border-rose-100">{error}</div>}
+          {error && <div className="p-4 mb-6 bg-rose-50 text-rose-600 rounded-2xl text-sm font-bold border border-rose-100">{error}</div>}
           
-          <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <div className="space-y-1.5 text-sm lg:col-span-2">
-              <label className="font-semibold text-slate-700">Họ và tên khách <span className="text-rose-500">*</span></label>
+          <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-2 text-sm lg:col-span-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Họ và tên khách <span className="text-rose-500">*</span></label>
               <input 
                 value={form.name} 
                 onChange={(e) => setForm({ ...form, name: e.target.value })} 
                 required 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-800"
+                className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-slate-700 placeholder:text-slate-300 transition-all"
                 placeholder="VD: Nguyễn Văn A"
               />
             </div>
             
-            <div className="space-y-1.5 text-sm">
-              <label className="font-semibold text-slate-700">Số điện thoại liên hệ</label>
+            <div className="space-y-2 text-sm">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Số điện thoại liên hệ</label>
               <input 
                 value={form.phone} 
                 onChange={(e) => setForm({ ...form, phone: e.target.value })} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-800"
+                className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-slate-700 placeholder:text-slate-300 transition-all"
                 placeholder="VD: 0912345678"
               />
             </div>
             
-            <div className="space-y-1.5 text-sm">
-              <label className="font-semibold text-slate-700">Phòng cần thăm <span className="text-rose-500">*</span></label>
+            <div className="space-y-2 text-sm">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Biển số xe (nếu có)</label>
+              <input 
+                value={form.plateNumber} 
+                onChange={(e) => setForm({ ...form, plateNumber: e.target.value })} 
+                className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-slate-700 placeholder:text-slate-300 transition-all"
+                placeholder="VD: 29A-123.45"
+              />
+            </div>
+            
+            <div className="space-y-2 text-sm">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Phòng cần thăm <span className="text-rose-500">*</span></label>
               <select 
                 value={form.roomId} 
                 onChange={(e) => setForm({ ...form, roomId: e.target.value })} 
                 required
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-800"
+                className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 font-black text-xs uppercase transition-all"
               >
                 <option value="">-- Chọn phòng --</option>
                 {rooms.map((r) => (
@@ -139,13 +171,13 @@ export default function Visitors() {
               </select>
             </div>
             
-            <div className="space-y-1.5 text-sm">
-              <label className="font-semibold text-slate-700">Người đại diện (Chủ phòng) <span className="text-rose-500">*</span></label>
+            <div className="space-y-2 text-sm">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Người đại diện (Chủ phòng) <span className="text-rose-500">*</span></label>
               <select 
                 value={form.tenantId} 
                 onChange={(e) => setForm({ ...form, tenantId: e.target.value })} 
                 required
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-800"
+                className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 font-black text-xs uppercase transition-all"
               >
                 <option value="">-- Chọn người thuê --</option>
                 {users.filter((u) => u.role === 'tenant').map((u) => (
@@ -154,28 +186,26 @@ export default function Visitors() {
               </select>
             </div>
             
-            <div className="space-y-1.5 text-sm">
-              <label className="font-semibold text-slate-700">Mục đích chuyến thăm</label>
+            <div className="space-y-2 text-sm">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Mục đích chuyến thăm</label>
               <input 
                 value={form.purpose} 
                 onChange={(e) => setForm({ ...form, purpose: e.target.value })} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-800"
+                className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 font-bold text-slate-700 placeholder:text-slate-300 transition-all"
                 placeholder="VD: Gặp người thân, giao hàng..." 
               />
             </div>
             
-            <div className="lg:col-span-3 flex justify-end pt-4 mt-2 border-t border-slate-100">
+            <div className="lg:col-span-3 flex justify-end pt-6 mt-2 border-t border-slate-50">
               <button 
                 type="submit" 
-                className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-8 py-4 bg-primary text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl hover:bg-black transition-all shadow-xl shadow-indigo-100 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-3 active:scale-95"
                 disabled={submitting}
               >
                 {submitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Đang lưu...
-                  </>
-                ) : 'Xác nhận thông tin khách'}
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : <ShieldCheck className="w-4 h-4" />}
+                Xác nhận thông tin
               </button>
             </div>
           </form>
@@ -183,27 +213,27 @@ export default function Visitors() {
       )}
 
       {/* Table Section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] shadow-[0px_20px_50px_rgba(74,63,226,0.03)] border border-slate-50 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Khách ghé thăm</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Điểm đến</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Mục đích</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Thời gian vào</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Trạng thái</th>
-                {isAdminOrSecurity && <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Thao tác</th>}
+              <tr className="bg-slate-50/30 border-b border-slate-50">
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Khách ghé thăm</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Điểm đến</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Mục đích</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Thời gian vào</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Trạng thái</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100/80">
+            <tbody className="divide-y divide-slate-50">
               {visitors.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdminOrSecurity ? 6 : 5} className="px-6 py-12 text-center">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-3">
-                      <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                  <td colSpan={6} className="px-8 py-20 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
+                      <ShieldCheck className="w-8 h-8 text-slate-200" />
                     </div>
-                    <h3 className="text-sm font-bold text-slate-800">Không có dữ liệu khách ra vào</h3>
+                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest italic">Không có dữ liệu lưu trú.</h3>
                   </td>
                 </tr>
               ) : (
@@ -211,60 +241,63 @@ export default function Visitors() {
                   const hasLeft = Boolean(v.checkOutAt);
                   
                   return (
-                    <tr key={v._id} className={`hover:bg-slate-50/70 transition-colors group ${!hasLeft ? 'bg-indigo-50/30' : ''}`}>
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-slate-800 flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${hasLeft ? 'bg-slate-300' : 'bg-emerald-500 animate-pulse'}`}></div>
+                    <tr key={v._id} className="hover:bg-slate-50/50 transition-all group">
+                      <td className="px-8 py-6">
+                        <div className="font-black text-[#2c2f31] flex items-center gap-3 font-display text-lg">
+                          <div className={cn("w-2 h-2 rounded-full", hasLeft ? "bg-slate-200" : "bg-emerald-500 animate-pulse")}></div>
                           {v.name}
                         </div>
-                        {v.phone && <div className="text-xs text-slate-500 font-medium mt-1">{v.phone}</div>}
+                        {v.phone && <div className="text-[11px] text-[#595c5e] font-black uppercase tracking-tight mt-1 opacity-60">{v.phone}</div>}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-indigo-600 line-clamp-1">
+                      <td className="px-8 py-6">
+                        <div className="font-black text-primary font-display text-lg tracking-tighter">
                           {typeof v.roomId === 'object' ? v.roomId?.name : 'Phòng không xác định'}
                         </div>
-                        <div className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">
-                          Gặp: <span className="text-slate-700">{typeof v.tenantId === 'object' ? v.tenantId?.fullName : '—'}</span>
+                        <div className="text-[10px] text-[#595c5e] font-black uppercase tracking-widest mt-1">
+                          Gặp: <span className="text-primary/70">{typeof v.tenantId === 'object' ? v.tenantId?.fullName : '—'}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-slate-600 font-medium line-clamp-2">{v.purpose || '-'}</div>
+                      <td className="px-8 py-6">
+                        <div className="text-sm text-[#595c5e] font-bold line-clamp-1 italic">{v.purpose || '-'}</div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600 font-medium">
+                      <td className="px-8 py-6">
                         {v.checkInAt ? (
                           <div className="flex flex-col">
-                            <span>{new Date(v.checkInAt).toLocaleDateString('vi-VN')}</span>
-                            <span className="text-xs text-slate-400">{new Date(v.checkInAt).toLocaleTimeString('vi-VN')}</span>
+                            <span className="text-sm font-black text-[#2c2f31]">{new Date(v.checkInAt).toLocaleDateString('vi-VN')}</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(v.checkInAt).toLocaleTimeString('vi-VN')}</span>
                           </div>
                         ) : '-'}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-8 py-6 text-center">
                         <div className="flex flex-col items-center">
                           {hasLeft ? (
-                            <>
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">Đã rời đi</span>
-                              <span className="text-xs text-slate-400 mt-1">{new Date(v.checkOutAt!).toLocaleTimeString('vi-VN')}</span>
-                            </>
+                            <span className="px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.1em] bg-slate-50 text-slate-400 border border-slate-100">Đã rời đi</span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">Đang ở trong tòa nhà</span>
+                            <span className="px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.1em] bg-emerald-50 text-emerald-600 border border-emerald-100">Đang lưu trú</span>
                           )}
                         </div>
                       </td>
                       
-                      {isAdminOrSecurity && (
-                        <td className="px-6 py-4 text-right">
-                          {!hasLeft ? (
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => setSelectedVisitor(v)}
+                            className="p-2.5 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-xl transition-all"
+                            title="Xem chi tiết"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                          
+                          {isAdminOrSecurity && !hasLeft && (
                             <button 
                               onClick={() => handleCheckout(v._id)}
-                              className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-all shadow-sm"
+                              className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95"
                             >
-                              Khách ra
+                              Checkout
                             </button>
-                          ) : (
-                            <span className="text-sm font-medium text-slate-400 italic">Hoàn tất</span>
                           )}
-                        </td>
-                      )}
+                        </div>
+                      </td>
                     </tr>
                   )
                 })
@@ -273,6 +306,127 @@ export default function Visitors() {
           </table>
         </div>
       </div>
+
+      {/* Detail Modal */}
+      {selectedVisitor && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedVisitor(null)}></div>
+          
+          <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+             <div className="px-8 py-6 bg-slate-50 flex justify-between items-center border-b border-slate-100">
+               <div className="flex items-center gap-3">
+                 <div className="p-2 bg-primary/10 text-primary rounded-xl">
+                   <UserIcon className="w-5 h-5" />
+                 </div>
+                 <h3 className="text-xl font-black font-display text-[#2c2f31] uppercase tracking-tighter">Chi tiết khách đến</h3>
+               </div>
+               <button 
+                onClick={() => setSelectedVisitor(null)}
+                className="p-2 hover:bg-slate-200 rounded-full transition-all"
+               >
+                 <X className="w-5 h-5 text-slate-400" />
+               </button>
+             </div>
+
+             <div className="p-8 space-y-8">
+               {/* Guest Profile */}
+               <div className="flex items-start gap-6">
+                 <div className="w-20 h-20 bg-indigo-50 border-4 border-white shadow-xl rounded-3xl flex items-center justify-center flex-shrink-0 text-primary font-black text-2xl font-display">
+                   {selectedVisitor.name.charAt(0).toUpperCase()}
+                 </div>
+                 <div>
+                   <h4 className="text-2xl font-black text-[#2c2f31] font-display leading-tight">{selectedVisitor.name}</h4>
+                   <div className="flex items-center gap-2 text-primary font-black text-[11px] uppercase tracking-[0.1em] mt-1">
+                     <Phone className="w-3.5 h-3.5" />
+                     {selectedVisitor.phone || 'Không có số điện thoại'}
+                   </div>
+                 </div>
+               </div>
+
+               {/* Detail Grid */}
+               <div className="grid grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
+                 <div className="space-y-1">
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                     <MapPin className="w-3 h-3" /> Điểm đến
+                   </p>
+                   <p className="text-lg font-black text-[#2c2f31] font-display tracking-tight">
+                     {typeof selectedVisitor.roomId === 'object' ? selectedVisitor.roomId?.name : '...'}
+                   </p>
+                 </div>
+                 <div className="space-y-1">
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                     <UserIcon className="w-3 h-3" /> Người đón
+                   </p>
+                   <p className="text-sm font-black text-primary font-display">
+                     {typeof selectedVisitor.tenantId === 'object' ? selectedVisitor.tenantId?.fullName : '...'}
+                   </p>
+                 </div>
+                 <div className="space-y-1">
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                     <Car className="w-3 h-3" /> Biển số xe
+                   </p>
+                   <p className="text-sm font-black text-[#2c2f31] font-display">
+                     {selectedVisitor.plateNumber || '—'}
+                   </p>
+                 </div>
+                 <div className="space-y-1 col-span-2 pt-2 border-t border-slate-200/50">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <Clock className="w-3 h-3" /> Thời gian lưu trú
+                    </p>
+                    <div className="flex flex-col gap-1 mt-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">Vào</span>
+                        <span className="text-sm font-black text-[#2c2f31]">
+                          {selectedVisitor.checkInAt ? new Date(selectedVisitor.checkInAt).toLocaleString('vi-VN') : '—'}
+                        </span>
+                      </div>
+                      {selectedVisitor.checkOutAt && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg">Ra</span>
+                          <span className="text-sm font-black text-[#2c2f31]">
+                            {new Date(selectedVisitor.checkOutAt).toLocaleString('vi-VN')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                 </div>
+               </div>
+
+               {/* Purpose */}
+               <div className="space-y-2">
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                   <FileText className="w-3 h-3" /> Mục đích chuyến thăm
+                 </p>
+                 <div className="p-5 bg-indigo-50/30 rounded-2xl border border-indigo-100/50 text-sm font-bold text-slate-700 italic leading-relaxed">
+                   "{selectedVisitor.purpose || 'Không có ghi chú mục đích cụ thể.'}"
+                 </div>
+               </div>
+
+               {/* Status Badge */}
+               <div className="pt-4">
+                 <div className={cn(
+                   "w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] text-[10px] border shadow-sm",
+                   selectedVisitor.checkOutAt 
+                    ? "bg-slate-50 text-slate-400 border-slate-100" 
+                    : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                 )}>
+                   {selectedVisitor.checkOutAt ? (
+                     <>
+                       <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                       Đã hoàn tất thủ tục ra
+                     </>
+                   ) : (
+                     <>
+                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                       Đang trong tòa nhà
+                     </>
+                   )}
+                 </div>
+               </div>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

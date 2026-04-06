@@ -16,7 +16,7 @@ import {
   Bed,
   Receipt,
   Briefcase,
-  LifeBuoy
+  UserCheck
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { notificationsApi } from '../api/notifications'
@@ -34,7 +34,6 @@ export default function Layout() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
-  const [loadingNotifs, setLoadingNotifs] = useState(false)
 
   // Fetch initial unread count and latest 5
   const fetchCountsAndLatest = async () => {
@@ -54,13 +53,28 @@ export default function Layout() {
     if (user?._id) fetchCountsAndLatest()
   }, [user?._id])
 
+  const [toast, setToast] = useState<{ title: string; message: string; show: boolean }>({ title: '', message: '', show: false })
+
   // Real-time socket listener
   useEffect(() => {
     if (!socket) return
     const handler = (newNote: any) => {
       setNotifications(prev => [newNote, ...prev].slice(0, 5))
       setUnreadCount(prev => prev + 1)
-      // Optional: Play sound or show browser toast here if tab is not focused
+      
+      // Hiển thị Toast thông báo nổi
+      setToast({ 
+        title: newNote.title || 'Thông báo mới', 
+        message: newNote.message || newNote.content || '', 
+        show: true 
+      })
+      
+      // Tự động đóng toast sau 5 giây
+      const timer = setTimeout(() => {
+        setToast(prev => ({ ...prev, show: false }))
+      }, 5000)
+      
+      return () => clearTimeout(timer)
     }
     socket.on('new_notification', handler)
     return () => { socket.off('new_notification', handler) }
@@ -98,15 +112,16 @@ export default function Layout() {
     { to: '/app/rooms', icon: Building2, label: 'Ký túc xá' },
     { to: '/app/users', icon: Users, label: 'Cư dân' },
     { to: '/app/bills', icon: ReceiptText, label: 'Hóa đơn' },
+    { to: '/app/visitors', icon: UserCheck, label: 'Sổ đăng ký khách' },
     { to: '/app/maintenance', icon: Wrench, label: 'Bảo trì' },
     { to: '/app/rental-requests', icon: ClipboardList, label: 'Yêu cầu thuê' },
     { to: '/app/settings', icon: Settings, label: 'Cài đặt' },
   ] : [
     { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', end: true },
-    { to: '/app/rooms', icon: Bed, label: 'My Room' },
-    { to: '/app/bills', icon: Receipt, label: 'Invoices' },
-    { to: '/app/services', icon: Briefcase, label: 'Services' },
-    { to: '/app/support', icon: LifeBuoy, label: 'Support' },
+    { to: '/app/rooms', icon: Bed, label: 'Phòng của tôi' },
+    { to: '/app/bills', icon: Receipt, label: 'Hóa đơn' },
+    { to: '/app/services', icon: Briefcase, label: 'Dịch vụ' },
+    { to: '/app/settings', icon: Settings, label: 'Cài đặt' },
   ]
 
   return (
@@ -258,6 +273,35 @@ export default function Layout() {
       <main className="ml-72 pt-32 px-10 pb-12 transition-all">
          <Outlet />
       </main>
+
+      {/* Floating Toast Notification - Editorial Style */}
+      {toast.show && (
+        <div className="fixed bottom-10 right-10 z-[100] animate-in fade-in slide-in-from-right-10 duration-500">
+           <div className="bg-slate-900 text-white p-6 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.25)] border border-white/10 w-[350px] relative overflow-hidden backdrop-blur-xl">
+              <div className="flex items-start gap-4">
+                 <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+                    <Bell className="w-6 h-6 text-white" />
+                 </div>
+                 <div className="flex-1 min-w-0 pr-4">
+                    <h4 className="text-sm font-black font-display tracking-tight leading-none mb-1.5">{toast.title}</h4>
+                    <p className="text-[11px] text-slate-400 font-medium leading-relaxed line-clamp-2">{toast.message}</p>
+                 </div>
+                 <button 
+                  onClick={() => setToast(prev => ({ ...prev, show: false }))}
+                  className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                 >
+                   <Plus className="w-5 h-5 rotate-45 text-slate-500" />
+                 </button>
+              </div>
+              
+              {/* Progress bar timer */}
+              <div className="absolute bottom-0 left-0 h-1 bg-primary animate-progress-shrink origin-left"></div>
+              
+              {/* Decorative background glow */}
+              <div className="absolute -right-10 -bottom-10 w-24 h-24 bg-primary/20 rounded-full blur-2xl pointer-events-none"></div>
+           </div>
+        </div>
+      )}
     </div>
   )
 }

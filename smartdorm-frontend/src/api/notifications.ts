@@ -37,6 +37,6 @@ export const notificationsApi = {
   unsubscribePush: (endpoint: string) => 
     api.delete('/push/unsubscribe', { data: { endpoint } }),
 
-  broadcast: (data: { title: string; content: string; type?: string; targetRole?: string; link?: string; metadata?: any }) =>
+  broadcast: (data: { title: string; content: string; type?: string; targetRole?: string; roomId?: string; link?: string; metadata?: any }) =>
     api.post('/notifications/broadcast', data)
 }

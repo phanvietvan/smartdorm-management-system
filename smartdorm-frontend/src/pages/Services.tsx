@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { servicesApi, type Service } from '../api/services'
 import { maintenanceApi, type MaintenanceRequest } from '../api/maintenance'
+import { useSocket } from '../hooks/useSocket'
 
 export default function Services() {
   const { user } = useAuth()
@@ -53,7 +54,9 @@ export default function Services() {
       setMLoading(true)
       const res = await maintenanceApi.getAll() 
       // Hiển thị hầu hết các yêu cầu (trừ những mục đã hủy nếu bạn muốn lọc bớt) để cung cấp cái nhìn tổng quan
-      const visible = res.data.filter(r => ['pending', 'in_progress', 'reopened', 'completed', 'closed'].includes(r.status))
+      const visible = res.data
+        .filter(r => ['pending', 'in_progress', 'reopened', 'completed', 'closed'].includes(r.status))
+        .slice(0, 3) // CHỈ LẤY 3 CÁI GẦN NHẤT
       setMaintenanceRequests(visible)
     } catch (err: any) {
       setMError(err.response?.data?.message || 'Lỗi tải lịch sử bảo trì')
@@ -61,6 +64,22 @@ export default function Services() {
       setMLoading(false)
     }
   }
+
+  // Real-time update for maintenance list
+  const { socket } = useSocket()
+  useEffect(() => {
+    if (!socket || !isTenant) return
+    
+    // Khi có thông báo mới (đặc biệt là maintenance), load lại danh sách
+    const handler = (newNote: any) => {
+      if (newNote.type === 'maintenance') {
+        loadMaintenance()
+      }
+    }
+
+    socket.on('new_notification', handler)
+    return () => { socket.off('new_notification', handler) }
+  }, [socket, isTenant])
 
   useEffect(() => {
     if (isAdmin || isGuest) {

@@ -2,7 +2,7 @@ const Bill = require("../models/Bill");
 const Service = require("../models/Service");
 const Room = require("../models/Room");
 const { ROLES } = require("../config/roles");
-const { notifyUser } = require("../utils/notifyUser");
+const { notifyUser, notifyByRole } = require("../utils/notificationService");
 
 const filterByUser = (req) => {
   const filter = {};
@@ -167,6 +167,18 @@ exports.dispute = async (req, res) => {
     bill.status = "disputed";
     bill.note = note || "Khách khiếu nại hóa đơn này";
     await bill.save();
+    
+    // Gửi thông báo cho Admin (vì service đã auto thêm admin, gọi notifyUser cho tenant là đủ, hoặc gọi cho chính tenant r admin cũng ké)
+    // Thực tế, gọi cho Admin trực tiếp cho chắc chắn mục đích
+    await notifyUser(
+      req.user._id, // Gửi cho chính người gửi (để có record)
+      "Khiếu nại hóa đơn",
+      `Người thuê đã gửi khiếu nại cho hóa đơn tháng ${bill.month}/${bill.year}.`,
+      "bill",
+      `/app/bills/${bill._id}`,
+      { userId: req.user._id, fullName: req.user.fullName, avatarUrl: req.user.avatarUrl }
+    );
+
     res.json({ success: true, message: "Đã gửi khiếu nại thành công", data: bill });
   } catch (err) {
     res.status(500).json({ message: err.message });

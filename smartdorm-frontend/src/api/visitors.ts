@@ -8,15 +8,16 @@ export type Visitor = {
   tenantId: { _id: string; fullName: string }
   purpose?: string
   idCard?: string
+  plateNumber?: string
   checkInAt: string
   checkOutAt?: string
 }
 
 export const visitorsApi = {
-  getAll: (params?: { roomId?: string; checkedOut?: string }) =>
+  getAll: (params?: { roomId?: string; checkedOut?: string; tenantId?: string }) =>
     api.get<Visitor[]>('/visitors', { params }),
   getById: (id: string) => api.get<Visitor>(`/visitors/${id}`),
-  create: (data: { name: string; phone?: string; roomId: string; tenantId: string; purpose?: string; idCard?: string }) =>
+  create: (data: { name: string; phone?: string; roomId: string; tenantId: string; purpose?: string; idCard?: string; plateNumber?: string }) =>
     api.post<Visitor>('/visitors', data),
   checkout: (id: string) => api.put<Visitor>(`/visitors/${id}/checkout`),
 }

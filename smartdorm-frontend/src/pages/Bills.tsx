@@ -6,9 +6,11 @@ import { roomsApi, type Room } from '../api/rooms'
 import { usersApi, type User } from '../api/users'
 import { useAuth } from '../context/AuthContext'
 import { cn } from '../lib/utils'
+import { useSocket } from '../hooks/useSocket'
 
 export default function Bills() {
   const { user } = useAuth()
+  const { socket } = useSocket()
   const isAdmin = user && ['admin', 'manager', 'landlord'].includes(user.role)
   const isTenant = user?.role === 'tenant'
 
@@ -69,6 +71,16 @@ export default function Bills() {
     }
     fetchData()
   }, [isTenant, user?.roomId])
+
+  useEffect(() => {
+    if (!socket) return
+    socket.on('new_notification', (notif: any) => {
+      if (notif.type === 'bill') {
+        load()
+      }
+    })
+    return () => { socket.off('new_notification') }
+  }, [socket])
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()

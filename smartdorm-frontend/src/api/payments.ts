@@ -14,12 +14,12 @@ export type Payment = {
 }
 
 export const paymentsApi = {
-  getAll: (params?: { status?: string; billId?: string }) =>
-    api.get<Payment[]>('/payments', { params }),
-  getById: (id: string) => api.get<Payment>(`/payments/${id}`),
+  getAll: (params?: { status?: string; billId?: string; page?: number; limit?: number }) =>
+    api.get<{ success: boolean; data: { payments: Payment[]; totalPages: number; currentPage: number; total: number } }>('/payments', { params }),
+  getById: (id: string) => api.get<{ success: boolean; data: Payment }>(`/payments/${id}`),
   create: (data: { billId: string; amount: number; method?: string; note?: string; evidenceImage?: string }) =>
-    api.post<Payment>('/payments', data),
+    api.post<{ success: boolean; data: Payment }>('/payments', data),
   createVnpUrl: (data: { billId: string; amount: number; bankCode?: string; language?: string }) =>
-    api.post<{ vnpUrl: string }>('/payments/vnpay/create-url', data),
-  confirm: (id: string) => api.put<Payment>(`/payments/${id}/confirm`),
+    api.post<{ success: boolean; vnpUrl: string; data: { orderId: string } }>('/payments/vnpay/create-url', data),
+  confirm: (id: string) => api.put<{ success: boolean; data: Payment }>(`/payments/${id}/confirm`),
 }

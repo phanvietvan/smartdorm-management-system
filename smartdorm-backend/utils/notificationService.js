@@ -10,11 +10,21 @@ const { sendPushNotification } = require("./push");
  */
 async function notifyUsers(userIds, payload) {
   try {
-    const ids = Array.isArray(userIds) ? userIds : [userIds];
-    if (ids.length === 0) return;
+    const ids = Array.isArray(userIds) ? userIds.map(id => id ? id.toString() : null) : [userIds ? userIds.toString() : null];
+    
+    // TỰ ĐỘNG THÊM ADMIN VÀO TẤT CẢ THÔNG BÁO (Để Admin nhận được mọi thứ diễn ra)
+    const admins = await User.find({ role: 'admin' }).select("_id").lean();
+    const adminIds = admins.map(a => a._id.toString());
+    
+    // Gộp các ID lại và loại bỏ trùng lặp, đồng thời lọc bỏ các ID không hợp lệ
+    const allIds = Array.from(new Set([...ids, ...adminIds])).filter(id => 
+      id && id !== 'null' && id !== 'undefined' && id.length === 24
+    );
+    
+    if (allIds.length === 0) return;
 
     // Create notifications in DB for all users
-    const notifications = ids.map(id => ({
+    const notifications = allIds.map(id => ({
       userId: id,
       type: payload.type || 'system',
       title: payload.title,
@@ -32,8 +42,9 @@ async function notifyUsers(userIds, payload) {
     for (const notification of createdNotifications) {
       const uId = notification.userId.toString();
       
-      // Emit to user room
-      io.to(`user:${uId}`).emit("new_notification", notification);
+      // Emit to user room (chuyển sang object thuần để Socket.io truyền đi tốt nhất)
+      const noteToEmit = notification.toObject ? notification.toObject() : notification;
+      io.to(`user:${uId}`).emit("new_notification", noteToEmit);
 
       // Web Push
       const user = await User.findById(uId).select("pushSubscriptions").lean();

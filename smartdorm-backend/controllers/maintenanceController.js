@@ -1,11 +1,15 @@
 const MaintenanceRequest = require("../models/MaintenanceRequest");
 const User = require("../models/User");
 const { ROLES } = require("../config/roles");
-const { notifyUser } = require("../utils/notifyUser");
+const { notifyUser, notifyByRole } = require("../utils/notificationService");
 
 const filterByUser = (req) => {
   const filter = {};
-  if (req.user.role === ROLES.TENANT) filter.tenantId = req.user._id;
+  if (req.user.role === ROLES.TENANT) {
+    filter.tenantId = req.user._id;
+  } else {
+    if (req.query.tenantId) filter.tenantId = req.query.tenantId;
+  }
   if (req.user.role === ROLES.MAINTENANCE_STAFF) filter.assignedTo = req.user._id;
   return filter;
 };
@@ -53,33 +57,49 @@ exports.create = async (req, res) => {
   try {
     const { roomId, title, description, category, urgency } = req.body;
     if (!roomId || !title) return res.status(400).json({ message: "Thiếu roomId hoặc title" });
-    const userRoomId = req.user.roomId?._id ? req.user.roomId._id.toString() : req.user.roomId?.toString();
-    if (req.user.role === ROLES.TENANT && userRoomId !== roomId) {
-      return res.status(403).json({ message: "Chỉ có thể báo sửa phòng của mình" });
+
+    // Lấy ID phòng của user hiện tại một cách an toàn
+    const userRoomId = req.user.roomId && (req.user.roomId._id ? req.user.roomId._id.toString() : req.user.roomId.toString());
+    
+    // Kiểm tra quyền (chỉ tenant mới bị giới hạn báo đúng phòng của mình)
+    if (req.user.role === ROLES.TENANT && userRoomId !== roomId.toString()) {
+      return res.status(403).json({ message: "Chỉ có thể báo sửa phòng của mình. ID phòng không khớp." });
     }
+
     const maintenance = new MaintenanceRequest({
-      roomId,
+      roomId: roomId,
       tenantId: req.user._id,
       title,
       description,
       category,
       urgency,
     });
+
     await maintenance.save();
-    const populated = await MaintenanceRequest.findById(maintenance._id).populate("roomId", "name").populate("tenantId", "fullName");
+    
+    const populated = await MaintenanceRequest.findById(maintenance._id)
+      .populate("roomId", "name")
+      .populate("tenantId", "fullName");
+      
     const tenantName = req.user.fullName || "Người thuê";
-    const contentForAdmin = `${tenantName} báo cáo sự cố: "${title}"${description ? `. ${description}` : ""}`;
+    const contentForAdmin = `${tenantName} báo cáo sự cố: "${title}"`;
     const actor = { userId: req.user._id, fullName: req.user.fullName, avatarUrl: req.user.avatarUrl };
     const link = `/app/maintenance/${maintenance._id}`;
     
-    // Gửi cho admin + manager
-    await notifyByRole(ROLES.ADMIN, { title: "Báo cáo sự cố mới", message: contentForAdmin, type: "maintenance", link, actor });
-    await notifyByRole(ROLES.MANAGER, { title: "Báo cáo sự cố mới", message: contentForAdmin, type: "maintenance", link, actor });
-    // Gửi cho landlord
-    await notifyByRole(ROLES.LANDLORD, { title: "Báo cáo sự cố mới", message: contentForAdmin, type: "maintenance", link, actor });
+    // Gộp các hàm thông báo từ service vào để đảm bảo nó luôn "defined" cho Promise.all
+    const { notifyByRole: nbr } = require("../utils/notificationService");
+
+    // Gửi thông báo cho Admin/Manager/Landlord trong khi vẫn giữ phản hồi nhanh
+    Promise.all([
+      nbr(ROLES.ADMIN, { title: "Báo cáo sự cố mới", message: contentForAdmin, type: "maintenance", link, actor }),
+      nbr(ROLES.MANAGER, { title: "Báo cáo sự cố mới", message: contentForAdmin, type: "maintenance", link, actor }),
+      nbr(ROLES.LANDLORD, { title: "Báo cáo sự cố mới", message: contentForAdmin, type: "maintenance", link, actor })
+    ]).catch(e => console.error("Notification broadcast error:", e));
+
     res.status(201).json(populated);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error("MAINTENANCE CREATE ERROR:", err);
+    res.status(400).json({ message: "Lỗi dữ liệu: " + err.message });
   }
 };
 
