@@ -33,11 +33,10 @@ export default function Rooms() {
   const [showForm, setShowForm] = useState(false)
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({ name: '', floor: 1, capacity: 1, price: 0, status: 'available', areaId: '', amenities: '', tenantId: '', contactPhone: '' })
-  const [newAmenity, setNewAmenity] = useState('')
   const [equipments, setEquipments] = useState<EquipmentInput[]>([])
   const [formError, setFormError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const [showSuccess, setShowSuccess] = useState(false)
   const [showRentalModal, setShowRentalModal] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
@@ -175,7 +174,6 @@ export default function Rooms() {
     }))
     setEquipments([])
     setFormError('')
-    setNewAmenity('')
   }
 
 

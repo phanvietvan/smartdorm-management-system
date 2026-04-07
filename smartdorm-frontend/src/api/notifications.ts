@@ -37,6 +37,12 @@ export const notificationsApi = {
   unsubscribePush: (endpoint: string) => 
     api.delete('/push/unsubscribe', { data: { endpoint } }),
 
+  createForUser: (data: { userId: string; title: string; message?: string; content?: string; type?: string; link?: string; metadata?: any }) => {
+    // Treat 'content' as 'message' for backend compatibility
+    const payload = { ...data, message: data.message || data.content }
+    return api.post<{ success: boolean; data: Notification }>('/notifications', payload)
+  },
+
   broadcast: (data: { title: string; content: string; type?: string; targetRole?: string; roomId?: string; link?: string; metadata?: any }) =>
     api.post('/notifications/broadcast', data)
 }

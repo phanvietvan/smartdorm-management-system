@@ -69,7 +69,7 @@ type NotificationItemProps = {
 
 const EMOJIS = ['👍', '❤️', '👏', '🔥']
 
-export default function NotificationItem({ note, onMarkRead, compact, index = 1 }: NotificationItemProps) {
+export default function NotificationItem({ note, onMarkRead, compact }: NotificationItemProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [reactions, setReactions] = useState(note.reactions || [])

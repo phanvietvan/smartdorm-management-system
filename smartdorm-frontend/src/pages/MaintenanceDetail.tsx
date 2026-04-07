@@ -40,8 +40,8 @@ export default function MaintenanceDetail() {
     if (!file || !req) return
     setUploading(true)
     try {
-      const { data } = await uploadApi.upload(file)
-      const newImages = [...(req.images || []), data.url]
+      const { data } = await uploadApi.uploadFile(file)
+      const newImages = [...(req.images || []), data.fileUrl]
       await maintenanceApi.update(req._id, { images: newImages })
       load()
     } catch (err) {

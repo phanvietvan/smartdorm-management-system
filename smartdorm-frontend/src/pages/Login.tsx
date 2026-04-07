@@ -5,7 +5,7 @@ import Lottie from "lottie-react";
 import homeAnimation from "./Home.json";
 import materialWaveLoading from "../assets/MaterialWaveLoading.json";
 import { useAuth } from "../context/AuthContext";
-import { Mail, Lock, ArrowRight, Github } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -115,7 +115,7 @@ export default function Login() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center px-1">
                   <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#595c5e]">Mật khẩu</label>
-                  <Link to="/forgot-password" size="sm" className="text-xs font-bold text-[#4b49cb] hover:underline transition-all">Quên mật khẩu?</Link>
+                  <Link to="/forgot-password" className="text-xs font-bold text-[#4b49cb] hover:underline transition-all">Quên mật khẩu?</Link>
                 </div>
                 <div className="relative group">
                   <input

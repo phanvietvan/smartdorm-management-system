@@ -118,12 +118,14 @@ export default function RentalRequestManage() {
                                 <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                                    <button 
                                       onClick={() => handleProcess(r._id!, 'rejected')}
+                                      disabled={processingId === r._id}
                                       className="px-6 py-2.5 bg-white border border-rose-100 text-rose-500 hover:bg-rose-50 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                                    >
                                       Từ chối
                                    </button>
                                    <button 
                                       onClick={() => handleProcess(r._id!, 'approved')}
+                                      disabled={processingId === r._id}
                                       className="px-6 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all"
                                    >
                                       Duyệt thuê
