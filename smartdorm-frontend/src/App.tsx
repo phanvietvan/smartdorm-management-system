@@ -32,12 +32,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 import RoomsAvailable from './pages/RoomsAvailable'
+import AppVersions from './pages/AppVersions'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/rooms-available" element={<RoomsAvailable />} />
+      <Route path="/apps" element={<AppVersions />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       

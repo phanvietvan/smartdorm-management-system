@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { authApi } from '../api/auth'
 import { usersApi } from '../api/users'
@@ -110,8 +109,7 @@ const translations = {
 }
 
 export default function ProfileSettings() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<TabId>('profile')
   const [langCode, setLangCode] = useState<'vi' | 'en'>(() => (localStorage.getItem('language') as any) || 'vi')
   

@@ -1,350 +1,363 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
-  Home as HomeIcon, 
-  ShieldCheck, 
-  Zap, 
-  Users, 
-  CreditCard, 
-  ArrowRight,
-  CheckCircle2,
-  Menu,
-  X
+  Zap,
+  Users,
+  Award,
+  RefreshCcw,
+  Rocket,
+  Lock,
+  Eye
 } from 'lucide-react'
-import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
-import ThemeToggle from '../components/ThemeToggle'
 import AIChatBot from '../components/AIChatBot'
+import MainNavbar from '../components/MainNavbar'
+import BackToTop from '../components/BackToTop'
+
+// Assets from the provided HTML
+const LOGO_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuDVvNbv8IrvBTPrPFW4xhw91KqkxFXtTQsJNSOL3-AVubs1PQpn4cdB7F5DiwZ5grGqVOX8bH1PX4vBhmMHsrT147B0zxLwFPnhX3DhLgbL1CQ_48Y_yrgsKJGmozsBvMOhceflAaKz8skT9tnY-qG3Ejx6V9vU1RD3jM72wDWhSAxss8IsCmGz6is88P0UcSnXABQAdsS4CrticISfhCgV0SV0R3MZMkGlce9qqpoINPAhuLr1jlWitxg8qAYlAd9dEXmCBihmMidu"
+const HERO_BG = "https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=2000"
 
 export default function LandingPage() {
-  console.log('Rendering LandingPage at root /')
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { user } = useAuth()
 
-  const features = [
-    {
-      icon: <ShieldCheck className="w-8 h-8 text-indigo-500" />,
-      title: "Quản lý an toàn",
-      desc: "Hệ thống bảo mật cao, quản lý khách ra vào và thông tin cư dân chặt chẽ."
-    },
-    {
-      icon: <Zap className="w-8 h-8 text-amber-500" />,
-      title: "Hóa đơn tự động",
-      desc: "Tự động tính toán tiền điện, nước và gửi thông báo thanh toán hàng tháng."
-    },
-    {
-      icon: <CreditCard className="w-8 h-8 text-emerald-500" />,
-      title: "Thanh toán VNPAY",
-      desc: "Tích hợp cổng thanh toán trực tuyến, tiện lợi và minh bạch cho người thuê."
-    },
-    {
-      icon: <Users className="w-8 h-8 text-rose-500" />,
-      title: "Cộng đồng văn minh",
-      desc: "Kết nối cư dân thông qua hệ thống tin nhắn và thông báo nội bộ."
-    }
-  ]
-
-  const stats = [
-    { label: "Phòng đã thuê", value: "95%" },
-    { label: "Người dùng", value: "500+" },
-    { label: "Hài lòng", value: "4.9/5" },
-    { label: "Khu vực", value: "10+" }
-  ]
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900/30 selection:text-indigo-900 dark:selection:text-indigo-200 overflow-x-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform duration-300">
-              <HomeIcon className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter italic">
-              Smart<span className="text-indigo-600">Dorm</span>
-            </span>
-          </Link>
+    <div className="min-h-screen bg-[#f5f6f9] dark:bg-slate-950 text-[#2c2f31] dark:text-slate-100 font-['Plus_Jakarta_Sans'] selection:bg-[#4b49cb]/10 selection:text-[#4b49cb] overflow-x-hidden antialiased">
+      
+      <MainNavbar />
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/rooms-available" className="text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 transition-colors">Xem phòng</Link>
-            <a href="#features" className="text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 transition-colors">Tính năng</a>
-            <ThemeToggle />
-            <div className="h-6 w-px bg-slate-200 mx-2"></div>
-            {user ? (
-              <Link 
-                to="/app/dashboard" 
-                className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-full shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all active:scale-95"
-              >
-                Vào Dashboard
-              </Link>
-            ) : (
-              <div className="flex items-center gap-4">
-                <Link to="/login" className="text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors">Đăng nhập</Link>
-                <Link 
-                  to="/register" 
-                  className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-full shadow-lg shadow-slate-200 hover:bg-indigo-600 hover:shadow-indigo-300 transition-all active:scale-95"
-                >
-                  Bắt đầu ngay
-                </Link>
-              </div>
-            )}
+      <main>
+        {/* Hero Section */}
+        <header className="relative h-screen flex items-center justify-center px-6 bg-[#f5f6f9] dark:bg-slate-950 overflow-hidden pb-48">
+          <div className="absolute inset-0 z-0 overflow-hidden text-slate-200">
+            <img className="w-full h-full object-cover opacity-100 transition-opacity duration-1000" src={HERO_BG} alt="Hero Background" />
+            {/* Minimal Bottom Fade only for transition */}
+            <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#f5f6f9] dark:from-slate-950 to-transparent"></div>
           </div>
-
-          {/* Mobile Menu Toggle */}
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* Mobile Nav */}
-        {isMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden bg-white border-b border-slate-200 px-6 py-8 flex flex-col gap-6 shadow-xl"
-          >
-            <Link to="/rooms-available" className="text-lg font-bold text-slate-900">Xem phòng</Link>
-            <a href="#features" className="text-lg font-bold text-slate-900">Tính năng</a>
-            <div className="h-px w-full bg-slate-100"></div>
-            <Link to="/login" className="text-lg font-bold text-slate-900">Đăng nhập</Link>
-            <Link to="/register" className="w-full py-4 bg-indigo-600 text-white text-center font-bold rounded-2xl shadow-lg shadow-indigo-100">Đăng ký ngay</Link>
-          </motion.div>
-        )}
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative pt-40 pb-32 overflow-hidden">
-        {/* Background blobs */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-indigo-50 rounded-full blur-3xl opacity-50 -z-10 animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[400px] h-[400px] bg-emerald-50 rounded-full blur-3xl opacity-50 -z-10 animate-pulse"></div>
-
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-full mb-6">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
-              </span>
-              <span className="text-indigo-700 text-xs font-bold uppercase tracking-wider">Hệ thống quản lý thông minh 2024</span>
+          
+          <div className="relative z-10 max-w-5xl text-center space-y-6 pt-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#cbceff]/60 dark:bg-indigo-900/40 text-[#192490] dark:text-indigo-200 border border-[#4b49cb]/20"
+            >
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Hệ sinh thái SmartDorm</span>
+            </motion.div>
+            
+            <div className="space-y-0 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              <motion.h1 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-6xl md:text-8xl font-black tracking-tighter text-[#2c2f31] dark:text-white leading-[0.9]"
+              >
+                Cách mạng Quản lý<br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4b49cb] to-[#973774]">SmartDorm.</span>
+              </motion.h1>
+              
+              <motion.p 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="max-w-xl mx-auto text-[#595c5e] dark:text-slate-400 text-sm md:text-lg font-bold italic tracking-tight pt-2"
+              >
+                Kiến tạo không gian sống thông minh,<br className="hidden md:block"/> tối ưu vận hành & nâng tầm trải nghiệm.
+              </motion.p>
             </div>
             
-            <h1 className="text-6xl md:text-7xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight mb-8">
-              Nâng tầm trải nghiệm <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-400">ký túc xá</span> hiện đại.
-            </h1>
-            
-            <p className="text-xl text-slate-500 font-medium leading-relaxed mb-10 max-w-xl">
-              SmartDorm giúp bạn tìm kiếm không gian sống lý tưởng, quản lý hóa đơn minh bạch và kết nối cộng đồng cư dân chỉ với vài lần chạm.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link 
-                to="/rooms-available" 
-                className="group px-8 py-5 bg-indigo-600 text-white text-lg font-bold rounded-2xl shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all flex items-center justify-center gap-3"
-              >
-                Xem phòng trống
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link 
-                to="/login" 
-                className="px-8 py-5 bg-white text-slate-900 text-lg font-bold rounded-2xl shadow-sm border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all flex items-center justify-center"
-              >
-                Đăng nhập
-              </Link>
-            </div>
-
-            <div className="mt-12 flex items-center gap-6">
-              <div className="flex -space-x-3">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className={`w-12 h-12 rounded-full border-4 border-white overflow-hidden bg-slate-200`}>
-                    <img src={`https://i.pravatar.cc/150?u=${i+10}`} alt="avatar" />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  {[1,2,3,4,5].map(i => (
-                    <svg key={i} className="w-4 h-4 text-amber-500 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                  ))}
-                </div>
-                <p className="text-sm font-bold text-slate-800">Cư dân tin dùng</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="relative"
-          >
-            <div className="relative rounded-[2.5rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(79,70,229,0.2)] border-8 border-white">
-              <img 
-                src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000" 
-                alt="Smart Dorm Interior" 
-                className="w-full h-full object-cover"
-              />
-              {/* Overlay elements */}
-              <div className="absolute bottom-8 left-8 right-8 p-6 bg-white/30 backdrop-blur-3xl rounded-3xl border border-white/40">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-white font-bold text-lg mb-1">Standard Queen Room</h4>
-                    <p className="text-white/80 text-sm font-medium">Khu A • Tầng 3</p>
-                  </div>
-                  <div className="px-4 py-2 bg-indigo-600 rounded-xl text-white font-black">
-                    3.5tr <span className="text-[10px] font-normal opacity-80">/tháng</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Floating badges */}
             <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-6 -right-6 p-5 bg-white rounded-3xl shadow-xl flex items-center gap-4 border border-slate-100"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col md:flex-row gap-4 justify-center pt-8"
             >
-              <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tiện ích</p>
-                <p className="text-slate-900 font-black">Wi-Fi Tốc độ cao</p>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="absolute -bottom-10 -left-10 p-5 bg-white rounded-3xl shadow-xl flex items-center gap-4 border border-slate-100"
-            >
-              <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center">
-                <Zap className="w-6 h-6 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">An ninh</p>
-                <p className="text-slate-900 font-black">Camera 24/7</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
-            {stats.map((stat, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <h3 className="text-5xl font-black text-slate-900 mb-2">{stat.value}</h3>
-                <p className="text-slate-500 font-bold tracking-wide uppercase text-xs">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-32">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="text-base font-black text-indigo-600 uppercase tracking-[0.2em] mb-4">Tại sao chọn chúng tôi</h2>
-            <p className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">Giải pháp toàn diện cho không gian sống hiện đại.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:shadow-indigo-100/50 transition-all duration-300"
-              >
-                <div className="mb-6 p-4 bg-slate-50 w-fit rounded-2xl group-hover:bg-indigo-50 transition-colors">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-4">{feature.title}</h3>
-                <p className="text-slate-500 font-medium leading-relaxed">{feature.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto relative group">
-          <div className="absolute inset-0 bg-indigo-600 rounded-[3rem] shadow-2xl shadow-indigo-200 rotate-1 group-hover:rotate-0 transition-transform duration-500"></div>
-          <div className="relative bg-slate-900 rounded-[3rem] p-12 md:p-24 overflow-hidden flex flex-col items-center text-center">
-            {/* Decoration */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
-
-            <motion.h2 
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tight max-w-3xl leading-tight"
-            >
-              Sẵn sàng trải nghiệm cuộc sống tiện nghi hơn?
-            </motion.h2>
-
-            <div className="flex flex-col sm:flex-row gap-6 mt-4">
-              <Link 
-                to="/register" 
-                className="px-10 py-5 bg-white text-slate-900 text-lg font-bold rounded-2xl shadow-lg hover:bg-slate-50 transition-all"
-              >
-                Đăng ký tài khoản
-              </Link>
-              <Link 
-                to="/rooms-available" 
-                className="px-10 py-5 bg-indigo-600 text-white text-lg font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition-all"
-              >
+              <Link to="/rooms-available" className="px-10 py-5 bg-[#4b49cb] text-white rounded-2xl font-black text-lg shadow-2xl shadow-[#4b49cb]/20 hover:scale-[1.02] active:scale-95 transition-all outline-none">
                 Tìm phòng ngay
               </Link>
+              <Link to="/register" className="px-10 py-5 bg-white dark:bg-slate-800 border border-[#abadb0]/20 text-[#2c2f31] dark:text-white rounded-2xl font-black text-lg hover:bg-[#eff1f4] dark:hover:bg-slate-700 transition-colors text-center flex items-center justify-center outline-none">
+                Hợp tác cho chủ nhà
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Floating Stats Card */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-5xl px-6 z-20">
+            <motion.div 
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, type: 'spring', damping: 20 }}
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-10 shadow-[0_32px_64px_rgba(0,0,0,0.08)] border border-white/40 dark:border-slate-800"
+            >
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] text-[#973774] font-black tracking-widest uppercase">Hiệu suất</p>
+                  <p className="text-3xl font-black tracking-tighter">+45%</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-[#4b49cb] font-black tracking-widest uppercase">Cư dân</p>
+                  <p className="text-3xl font-black tracking-tighter">2k+</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-[#3a45ad] font-black tracking-widest uppercase">Vận hành</p>
+                  <p className="text-3xl font-black tracking-tighter">24/7</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-[#a70138] font-black tracking-widest uppercase">Tự động</p>
+                  <p className="text-3xl font-black tracking-tighter">98%</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </header>
+
+        {/* Real-time Tracking Section (Operation Core) */}
+        <section id="operation-core" className="py-32 px-12 bg-[#f5f2fd] dark:bg-slate-900/50 relative overflow-hidden">
+          {/* New subtle network background */}
+          <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+            <img src="/operation_core_network_bg_1775691229058.png" className="w-full h-full object-cover" alt="network background" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#f5f2fd] via-transparent to-[#f5f2fd] dark:from-slate-950 dark:to-slate-950"></div>
+          </div>
+          
+          <div className="max-w-[1700px] mx-auto relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-12 mb-20">
+              <div className="max-w-2xl">
+                <motion.span 
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  className="text-sm font-black text-[#854300] dark:text-orange-400 tracking-[0.2rem] uppercase mb-4 block"
+                >
+                  Operation Core
+                </motion.span>
+                <motion.h2 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  className="text-5xl md:text-7xl font-black tracking-tighter text-[#1b1b23] dark:text-white"
+                >
+                  Real-time Tracking &<br/> Digital Presence
+                </motion.h2>
+              </div>
+              <motion.p 
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                className="text-lg text-slate-600 dark:text-slate-400 max-w-sm mb-2 font-bold italic"
+              >
+                Giám sát mọi biến động tại cơ sở của bạn với độ trễ gần như bằng không thông qua hệ thống cảm biến thông minh.
+              </motion.p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { icon: <Zap className="w-8 h-8"/>, title: "Smart Metering", desc: "Theo dõi chỉ số điện nước tự động, chốt số cuối tháng trong 1 giây không sai sót." },
+                { icon: <Lock className="w-8 h-8"/>, title: "Access Control", desc: "Mở khóa từ xa, quản lý vân tay và mã PIN cho từng phòng cư dân trực tiếp từ portal." },
+                { icon: <Eye className="w-8 h-8"/>, title: "Security AI", desc: "Phát hiện xâm nhập lạ hoặc hành vi bất thường trực tiếp thông qua camera AI." }
+              ].map((feat, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="group bg-white dark:bg-slate-800 p-12 rounded-[2.5rem] hover:bg-[#4441c4] transition-all duration-500 hover:translate-y-[-8px] shadow-xl shadow-slate-200/50 dark:shadow-none"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-[#4441c4]/10 flex items-center justify-center mb-10 group-hover:bg-white/20 transition-colors text-[#4441c4] group-hover:text-white">
+                    {feat.icon}
+                  </div>
+                  <h3 className="text-2xl font-black mb-4 group-hover:text-white tracking-tight">{feat.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-400 group-hover:text-white/80 leading-relaxed mb-8 font-bold italic">{feat.desc}</p>
+                  <div className="h-1.5 w-12 bg-[#4441c4] group-hover:bg-white/40 transition-colors rounded-full"></div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Technology Showcase (The Portal Command) */}
+        <section id="portal-command" className="py-40 px-12 bg-white dark:bg-slate-950 relative overflow-hidden">
+          <div className="max-w-[1700px] mx-auto relative z-10">
+            <div className="text-center max-w-3xl mx-auto mb-24">
+              <motion.h2 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                className="text-6xl md:text-8xl font-black tracking-tighter text-[#1b1b23] dark:text-white mb-8 italic"
+              >
+                The Portal Command
+              </motion.h2>
+              <p className="text-xl text-slate-500 dark:text-slate-400 font-bold italic">Một bảng điều khiển duy nhất cho tất cả các hoạt động. Từ quản lý hợp đồng, hóa đơn đến xử lý khiếu nại cư dân.</p>
+            </div>
+
+            <div className="relative bg-slate-100 dark:bg-slate-900 rounded-[4rem] p-4 lg:p-12 shadow-2xl overflow-hidden group border border-slate-200 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-950 rounded-[3rem] overflow-hidden shadow-inner border border-slate-200/50 dark:border-slate-800 aspect-video relative">
+                <img className="w-full h-full object-cover opacity-90 transition-transform duration-1000 group-hover:scale-105" src="/smartdorm_dashboard_ui_3d_1775690957148.png" alt="Dashboard Mockup" />
+                <div className="absolute top-20 right-20 space-y-4">
+                  <motion.div 
+                    whileHover={{ x: -10 }}
+                    className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-[#4441c4]/10 max-w-xs transform translate-x-12 group-hover:translate-x-0 transition-transform duration-1000"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="w-3 h-3 bg-[#4441c4] rounded-full animate-ping"></span>
+                      <span className="font-black text-xs uppercase tracking-tight">Hợp đồng hết hạn</span>
+                    </div>
+                    <p className="text-3xl font-black text-[#4441c4]">12 Phòng</p>
+                    <p className="text-[10px] text-slate-400 mt-2 italic font-bold">Tự động gửi thông báo gia hạn...</p>
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-4 gap-12 mt-24">
+              {[
+                { n: "01", t: "Quản lý Tập trung", d: "Xử lý 100+ tòa nhà trong một giao diện duy nhất." },
+                { n: "02", t: "Thanh toán Tự động", d: "Tích hợp VNPay, Momo tự động gạch nợ hóa đơn." },
+                { n: "03", t: "Báo cáo Tài chính", d: "Xuất báo cáo P&L thời gian thực chỉ với 1 click." },
+                { n: "04", t: "Hệ sinh thái API", d: "Kết nối dễ dàng với các phần mềm kế toán ERP." }
+              ].map((item, i) => (
+                <div key={i} className="space-y-4 border-l-2 border-[#4441c4]/20 pl-8 hover:border-[#4441c4] transition-colors">
+                  <span className="text-[#4441c4] font-black text-4xl opacity-50">{item.n}</span>
+                  <h4 className="text-xl font-black tracking-tight">{item.t}</h4>
+                  <p className="text-sm text-slate-500 font-bold italic">{item.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="absolute -bottom-[20%] -left-[10%] w-[600px] h-[600px] bg-[#4441c4]/5 rounded-full blur-[120px] pointer-events-none"></div>
+        </section>
+
+        {/* Digital Operations Bento Grid */}
+        <section id="digital-operations" className="py-32 px-12 bg-[#f5f2fd] dark:bg-slate-900/50">
+          <div className="max-w-[1700px] mx-auto">
+            <div className="mb-20 space-y-4">
+              <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-[#1b1b23] dark:text-white">Digital Operations</h2>
+              <div className="w-24 h-2 bg-[#4441c4] rounded-full"></div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-8 min-h-[800px]">
+              <motion.div 
+                whileHover={{ scale: 0.98 }}
+                className="md:col-span-2 md:row-span-1 bg-white dark:bg-slate-800 rounded-[3rem] p-16 flex flex-col justify-between relative overflow-hidden group shadow-xl"
+              >
+                <div className="relative z-10 max-w-md">
+                  <h3 className="text-4xl font-black mb-6 tracking-tight">Hệ thống Ticket 24/7</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-lg font-bold italic leading-relaxed">Cư dân báo cáo sự cố qua App, kỹ thuật viên nhận lệnh tức thì trên Portal. Theo dõi tiến độ sửa chữa minh bạch.</p>
+                </div>
+                <img className="absolute right-0 bottom-0 w-1/2 h-full object-cover opacity-10 group-hover:opacity-30 transition-opacity duration-700" src="/smart_lock_iot_detail_1775690970931.png" alt="maintenance" />
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="bg-[#4441c4] rounded-[3rem] p-12 text-white flex flex-col justify-center items-center text-center shadow-2xl shadow-[#4441c4]/30"
+              >
+                <Award className="w-24 h-24 mb-6" />
+                <h3 className="text-3xl font-black mb-4 tracking-tight">Tiêu chuẩn 5 Sao</h3>
+                <p className="text-white/80 font-bold italic">Mang lại trải nghiệm sống đẳng cấp cho cư dân của bạn.</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ rotate: 1 }}
+                className="bg-white dark:bg-slate-800 rounded-[3rem] p-12 flex flex-col justify-between shadow-xl"
+              >
+                <div>
+                  <Users className="w-12 h-12 text-[#4441c4] mb-8" />
+                  <h3 className="text-3xl font-black mb-4 tracking-tight">Cộng đồng Số</h3>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 font-bold italic">Tổ chức sự kiện, khảo sát ý kiến và truyền thông nội bộ hiệu quả hơn bao giờ hết.</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="md:col-span-2 bg-white dark:bg-slate-800 rounded-[3rem] p-16 flex items-center justify-between overflow-hidden shadow-xl"
+              >
+                <div className="max-w-lg">
+                  <h3 className="text-4xl font-black mb-6 tracking-tight">Tự động hóa Quy trình</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-lg font-bold italic">Hệ thống tự động nhắc nợ, tự động xuất hợp đồng điện tử và tự động phân tích hành vi tiêu thụ điện năng.</p>
+                </div>
+                <div className="hidden lg:flex gap-6">
+                  <div className="w-32 h-32 rounded-3xl bg-slate-50 dark:bg-slate-700 flex items-center justify-center shadow-inner">
+                    <RefreshCcw className="text-[#4441c4] w-12 h-12 animate-spin-slow" />
+                  </div>
+                  <div className="w-32 h-32 rounded-3xl bg-[#4441c4] flex items-center justify-center shadow-xl">
+                    <Rocket className="text-white w-12 h-12" />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24 px-12 bg-white dark:bg-slate-950">
+          <div className="max-w-[1700px] mx-auto bg-[#1b1b23] rounded-[4rem] p-16 md:p-32 text-center relative overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.3)]">
+            <div className="absolute inset-0 opacity-10">
+              <img className="w-full h-full object-cover" src="/futuristic_smart_building_cta_1775690988668.png" alt="Tech" />
+            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              className="relative z-10"
+            >
+              <h2 className="text-5xl md:text-8xl font-black text-white tracking-tighter mb-12 leading-tight italic">
+                Sẵn sàng số hóa<br/>tòa nhà của bạn?
+              </h2>
+              <div className="flex flex-wrap justify-center gap-8">
+                <Link to="/register" className="px-16 py-7 bg-[#4441c4] text-white text-2xl font-black rounded-3xl hover:scale-105 transition-transform shadow-2xl shadow-[#4441c4]/20">
+                  Liên hệ tư vấn ngay
+                </Link>
+                <Link to="/login" className="px-16 py-7 bg-white/10 text-white text-2xl font-black rounded-3xl backdrop-blur-md hover:bg-white/20 transition-all border border-white/20">
+                  Dùng thử miễn phí
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full py-24 px-12 bg-white dark:bg-slate-950 border-t border-slate-200/15">
+        <div className="flex flex-col md:flex-row justify-between items-start max-w-[1920px] mx-auto gap-12">
+          <div className="space-y-8 max-w-md">
+            <div className="flex items-center gap-3">
+              <img alt="SmartDorm Logo" className="h-6 w-auto" src={LOGO_URL} />
+              <span className="text-2xl font-black text-[#1b1b23] dark:text-white tracking-tighter">SmartDorm</span>
+            </div>
+            <p className="text-slate-500 font-bold uppercase tracking-[0.05em] text-[12px] leading-relaxed italic">
+              Hệ thống quản trị và tự động hóa vận hành bất động sản cho thuê số 1 Việt Nam. Triết lý thiết kế Luminous Curator mang lại sự cân bằng giữa công nghệ và trải nghiệm nhân văn.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-12 lg:gap-24">
+            <div className="space-y-4">
+              <h5 className="font-extrabold text-xs uppercase tracking-widest text-[#1b1b23] dark:text-white">Platform</h5>
+              <ul className="space-y-3">
+                {['Architecture API', 'IoT SDK', 'Cloud Engine'].map(l => (
+                  <li key={l}><a className="text-slate-500 hover:text-[#4441c4] transition-colors font-bold uppercase tracking-[0.05em] text-[11px]" href="#">{l}</a></li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-4">
+              <h5 className="font-extrabold text-xs uppercase tracking-widest text-[#1b1b23] dark:text-white">Company</h5>
+              <ul className="space-y-3">
+                {['Sustainability', 'Contact Sales', 'Privacy Policy'].map(l => (
+                  <li key={l}><a className="text-slate-500 hover:text-[#4441c4] transition-colors font-bold uppercase tracking-[0.05em] text-[11px]" href="#">{l}</a></li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-4">
+              <h5 className="font-extrabold text-xs uppercase tracking-widest text-[#1b1b23] dark:text-white">Support</h5>
+              <ul className="space-y-3">
+                {['Documentation', 'Terms of Service', 'Changelog'].map(l => (
+                  <li key={l}><a className="text-slate-500 hover:text-[#4441c4] transition-colors font-bold uppercase tracking-[0.05em] text-[11px]" href="#">{l}</a></li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-20 border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-12">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-                <HomeIcon className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-black text-slate-900 tracking-tighter italic">
-                Smart<span className="text-indigo-600">Dorm</span>
-              </span>
-            </div>
-            
-            <div className="flex gap-12 text-sm font-bold text-slate-400 uppercase tracking-widest">
-              <Link to="/rooms-available" className="hover:text-indigo-600 transition-colors">Về chúng tôi</Link>
-              <a href="#" className="hover:text-indigo-600 transition-colors">Điều khoản</a>
-              <a href="#" className="hover:text-indigo-600 transition-colors">Bảo mật</a>
-              <a href="#" className="hover:text-indigo-600 transition-colors">Liên hệ</a>
-            </div>
-
-            <p className="text-slate-400 text-sm font-medium italic">
-              &copy; 2024 SmartDorm. Nâng tầm sống Việt.
-            </p>
+        <div className="max-w-[1920px] mx-auto mt-20 pt-10 border-t border-slate-200/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-slate-500 font-bold uppercase tracking-[0.05em] text-[11px]">© 2024 SmartDorm Ecosystem. The Luminous Curator Philosophy.</p>
+          <div className="flex gap-8">
+             <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-[#4441c4] transition-all cursor-pointer"><Zap size={18} /></div>
+             <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-[#4441c4] transition-all cursor-pointer"><Users size={18} /></div>
           </div>
         </div>
       </footer>
+
       <AIChatBot />
+      <BackToTop />
     </div>
   )
 }

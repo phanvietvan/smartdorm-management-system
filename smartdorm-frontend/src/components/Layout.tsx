@@ -16,7 +16,8 @@ import {
   Bed,
   Receipt,
   Briefcase,
-  UserCheck
+  UserCheck,
+  Globe
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { notificationsApi } from '../api/notifications'
@@ -110,6 +111,7 @@ export default function Layout() {
   const isAdmin = user && ['admin', 'manager', 'accountant', 'landlord'].includes(user.role)
 
   const navLinks = isAdmin ? [
+    { to: '/', icon: Globe, label: 'Website' },
     { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', end: true },
     { to: '/app/rooms', icon: Building2, label: 'Ký túc xá' },
     { to: '/app/users', icon: Users, label: 'Cư dân' },
@@ -119,6 +121,7 @@ export default function Layout() {
     { to: '/app/rental-requests', icon: ClipboardList, label: 'Yêu cầu thuê' },
     { to: '/app/settings', icon: Settings, label: 'Cài đặt' },
   ] : [
+    { to: '/', icon: Globe, label: 'Website' },
     { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', end: true },
     { to: '/app/rooms', icon: Bed, label: 'Phòng của tôi' },
     { to: '/app/bills', icon: Receipt, label: 'Hóa đơn' },
