@@ -68,7 +68,6 @@ const paymentSchema = new mongoose.Schema(
 );
 
 paymentSchema.index({ tenantId: 1, createdAt: -1 });
-paymentSchema.index({ orderId: 1 });
 paymentSchema.index({ billId: 1 });
 paymentSchema.index({ status: 1 });
 

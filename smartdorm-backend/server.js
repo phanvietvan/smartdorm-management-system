@@ -35,6 +35,7 @@ const serviceRoutes = require("./routes/services");
 const notificationRoutes = require("./routes/notifications");
 const uploadRoutes = require("./routes/upload");
 const rentalRequestRoutes = require("./routes/rentalRequests");
+const aiRoutes = require("./routes/aiRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -75,6 +76,7 @@ app.use("/services", serviceRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/upload", uploadRoutes);
 app.use("/rental-requests", rentalRequestRoutes);
+app.use("/ai", aiRoutes);
 
 // --- Push Route --- (New)
 app.post("/push/subscribe", require("./middleware/auth").authenticate, async (req, res) => {

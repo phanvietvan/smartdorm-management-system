@@ -8,6 +8,7 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@react-oauth/google": "^0.13.4",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",

@@ -71,19 +71,19 @@ export default function Register() {
         <div className="w-full max-w-[520px]">
           
           {/* Brand Anchor */}
-          <div className="mb-0 text-center animate-in fade-in slide-in-from-top-8 duration-700">
+          <Link to="/" className="mb-0 text-center animate-in fade-in slide-in-from-top-8 duration-700 block transition-transform active:scale-95 group">
             <div className="flex justify-center mb-0">
                <div className="w-28 h-28 drop-shadow-2xl">
                   <Lottie animationData={homeAnimation} loop={true} />
                </div>
             </div>
-            <h1 className="text-4xl font-black tracking-[-0.04em] text-[#1e293b] mb-1 leading-none">
+            <h1 className="text-4xl font-black tracking-[-0.04em] text-[#1e293b] mb-1 leading-none group-hover:text-indigo-600 transition-colors uppercase">
               SMARTDORM
             </h1>
             <p className="text-[#595c5e] text-[10px] tracking-[0.3em] font-black uppercase opacity-70">
               Modern Housing Management
             </p>
-          </div>
+          </Link>
 
           {/* Register Card */}
           <div className="bg-white/70 backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.05)] border border-white/50 relative overflow-hidden animate-in zoom-in-95 duration-500">

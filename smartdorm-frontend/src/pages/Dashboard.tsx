@@ -222,16 +222,16 @@ export default function Dashboard() {
     return (
       <main className="w-full max-w-7xl mx-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
         <section className="mb-12">
-          <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-3 text-[#2c2f31] font-display">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-3 text-[#2c2f31] dark:text-white font-display">
             Chào mừng trở lại, {user?.fullName || 'Tân'}.
           </h2>
-          <p className="text-[#595c5e] text-lg font-medium">
+          <p className="text-[#595c5e] dark:text-slate-400 text-lg font-medium">
             {userRoom ? `Mọi thứ tại Phòng ${userRoom.name} đều đang hoạt động tốt hôm nay.` : "Chào mừng bạn đến với môi trường sống hiện đại SmartDorm."}
           </p>
         </section>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white p-7 rounded-[2rem] shadow-[0px_20px_50px_rgba(74,63,226,0.06)] border border-white/50 transition-all hover:shadow-2xl hover:-translate-y-1 duration-500">
+          <div className="bg-white dark:bg-slate-900 p-7 rounded-[2rem] shadow-[0px_20px_50px_rgba(74,63,226,0.06)] border border-white/50 dark:border-slate-800 transition-all hover:shadow-2xl hover:-translate-y-1 duration-500">
             <div className="flex justify-between items-start mb-6">
               <div className="p-4 bg-indigo-50 text-primary rounded-2xl">
                 <Banknote className="w-6 h-6" />
@@ -240,8 +240,8 @@ export default function Dashboard() {
                 {userRoom ? 'Đã thuê' : 'Trống'}
               </span>
             </div>
-            <p className="text-[#595c5e] text-xs font-bold uppercase tracking-widest mb-1 opacity-60">Giá phòng thuê</p>
-            <h3 className="text-2xl font-black font-display text-[#2c2f31]">
+            <p className="text-[#595c5e] dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-1 opacity-60">Giá phòng thuê</p>
+            <h3 className="text-2xl font-black font-display text-[#2c2f31] dark:text-white">
               {formatCurrency(userRoom?.price || 0)} đ
             </h3>
           </div>
@@ -257,8 +257,8 @@ export default function Dashboard() {
                 </span>
               )}
             </div>
-            <p className="text-[#595c5e] text-xs font-bold uppercase tracking-widest mb-1 opacity-60">Hóa đơn chờ trả</p>
-            <h3 className="text-4xl font-black font-display text-[#2c2f31]">{pendingBillsCount}</h3>
+            <p className="text-[#595c5e] dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-1 opacity-60">Hóa đơn chờ trả</p>
+            <h3 className="text-4xl font-black font-display text-[#2c2f31] dark:text-white">{pendingBillsCount}</h3>
           </div>
 
           <div className="bg-white p-7 rounded-[2rem] shadow-[0px_20px_50px_rgba(74,63,226,0.06)] border border-white/50 transition-all hover:shadow-2xl hover:-translate-y-1 duration-500">

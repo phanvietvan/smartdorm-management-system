@@ -42,9 +42,15 @@
 }
 
 :root {
-  --background: #f5f7f9;
-  --foreground: #2c2f31;
-  --on-surface-variant: #595c5e;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --on-surface-variant: #64748b;
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #f1f5f9;
+  --on-surface-variant: #94a3b8;
 }
 
 body {
@@ -52,6 +58,7 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .material-symbols-outlined {

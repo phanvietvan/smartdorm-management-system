@@ -22,6 +22,7 @@ import VnpayCallback from './pages/VnpayCallback'
 import RentalRequestManage from './pages/RentalRequestManage'
 import PendingApproval from './pages/PendingApproval'
 import { useAuth } from './context/AuthContext'
+import LandingPage from './pages/LandingPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -35,7 +36,7 @@ import RoomsAvailable from './pages/RoomsAvailable'
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/rooms-available" element={<RoomsAvailable />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />

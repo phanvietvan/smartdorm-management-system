@@ -23,6 +23,8 @@ import { notificationsApi } from '../api/notifications'
 import NotificationItem from './NotificationItem'
 import { useSocket } from '../hooks/useSocket'
 import { usePushNotification } from '../hooks/usePushNotification'
+import ThemeToggle from './ThemeToggle'
+import AIChatBot from './AIChatBot'
 
 export default function Layout() {
   const { user, logout } = useAuth()
@@ -125,9 +127,9 @@ export default function Layout() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#f5f7f9] text-[#2c2f31] font-display antialiased">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] font-display antialiased">
       {/* SideNavBar - Premium Editorial Style */}
-      <aside className="h-screen w-72 fixed left-0 top-0 overflow-hidden bg-white flex flex-col py-8 px-5 z-50 border-r border-slate-50 shadow-[20px_0_40px_rgba(74,63,226,0.02)] transition-all">
+      <aside className="h-screen w-72 fixed left-0 top-0 overflow-hidden bg-white dark:bg-slate-900 flex flex-col py-8 px-5 z-50 border-r border-slate-50 dark:border-slate-800 shadow-[20px_0_40px_rgba(74,63,226,0.02)] transition-all">
         <div className="mb-12 px-3 flex items-center gap-4">
           <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 rotate-3 hover:rotate-0 transition-transform">
             <Building2 className="text-white w-6 h-6" />
@@ -150,7 +152,7 @@ export default function Layout() {
                    "relative flex items-center gap-4 px-5 py-4 transition-all font-bold group",
                    isActive 
                     ? "text-primary" 
-                    : "text-[#595c5e] hover:text-primary hover:bg-indigo-50/50 rounded-2xl"
+                    : "text-[#595c5e] dark:text-slate-400 hover:text-primary dark:hover:text-primary hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 rounded-2xl"
                 )}
               >
                 {({ isActive }) => (
@@ -170,9 +172,9 @@ export default function Layout() {
         </nav>
 
         <div className="mt-auto px-1 space-y-4 pt-8">
-          <div className="p-5 bg-indigo-50/30 rounded-3xl border border-indigo-50/50">
+          <div className="p-5 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-3xl border border-indigo-50/50 dark:border-indigo-900/20">
              <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-3 opacity-60">Thao tác nhanh</p>
-             <button className="w-full bg-white text-primary py-3.5 px-4 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all shadow-sm">
+             <button className="w-full bg-white dark:bg-slate-800 text-primary dark:text-indigo-400 py-3.5 px-4 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary dark:hover:bg-primary hover:text-white dark:hover:text-white transition-all shadow-sm">
               <Plus className="w-4 h-4" />
               <span>{isAdmin ? 'Tạo mới' : 'Yêu cầu'}</span>
             </button>
@@ -180,7 +182,7 @@ export default function Layout() {
           
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-[#595c5e] hover:bg-rose-50 hover:text-rose-600 transition-all font-bold text-sm"
+            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-[#595c5e] dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:text-rose-600 transition-all font-bold text-sm"
           >
             <LogOut className="w-5 h-5" />
             <span>Đăng xuất</span>
@@ -189,9 +191,9 @@ export default function Layout() {
       </aside>
 
       {/* TopNavBar */}
-      <header className="fixed top-0 right-0 left-72 h-24 z-40 flex justify-between items-center px-10 bg-white/70 backdrop-blur-xl border-b border-indigo-50/20 shadow-sm transition-all">
-        <div className="flex items-center bg-[#f5f7f9] px-6 py-3 rounded-2xl w-[400px] border border-transparent focus-within:bg-white focus-within:border-indigo-100 transition-all">
-          <Search className="text-[#595c5e] w-4 h-4 mr-3 opacity-40" />
+      <header className="fixed top-0 right-0 left-72 h-24 z-40 flex justify-between items-center px-10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-indigo-50/20 dark:border-slate-800/50 shadow-sm transition-all">
+        <div className="flex items-center bg-[#f5f7f9] dark:bg-slate-800/50 px-6 py-3 rounded-2xl w-[400px] border border-transparent focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:border-indigo-100 dark:focus-within:border-indigo-900 transition-all">
+          <Search className="text-[#595c5e] dark:text-slate-500 w-4 h-4 mr-3 opacity-40" />
           <input 
             type="text" 
             placeholder={isAdmin ? "Tìm nhanh..." : "Tìm hóa đơn..."}
@@ -202,6 +204,7 @@ export default function Layout() {
         </div>
 
         <div className="flex items-center gap-8">
+          <ThemeToggle />
           <div className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
@@ -255,9 +258,9 @@ export default function Layout() {
             )}
           </div>
           
-          <div className="flex items-center gap-4 cursor-pointer hover:bg-slate-50 p-2 rounded-2xl transition-all group">
+          <div className="flex items-center gap-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 p-2 rounded-2xl transition-all group">
             <div className="hidden lg:block text-right">
-              <p className="text-sm font-black text-[#2c2f31] leading-tight font-display tracking-tight truncate max-w-[120px]">{user?.fullName}</p>
+              <p className="text-sm font-black text-[#2c2f31] dark:text-white leading-tight font-display tracking-tight truncate max-w-[120px]">{user?.fullName}</p>
               <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-0.5">{user?.role}</p>
             </div>
             <img 
@@ -302,6 +305,8 @@ export default function Layout() {
            </div>
         </div>
       )}
+
+      <AIChatBot />
     </div>
   )
 }
