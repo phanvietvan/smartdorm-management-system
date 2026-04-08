@@ -26,6 +26,10 @@ export default defineConfig({
       '/bills': {
         target: 'http://localhost:5000',
         changeOrigin: true,
+      },
+      '/ai': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
       }
     }
   },

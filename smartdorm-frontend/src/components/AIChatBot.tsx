@@ -60,44 +60,62 @@ export default function AIChatBot() {
     setInputValue('')
     setIsLoading(true)
 
+    // Tạo tin nhắn AI tạm thời để nhận dữ liệu stream
+    const aiMessageId = (Date.now() + 1).toString();
+    const aiMessage: Message = {
+      id: aiMessageId,
+      text: '', // Bắt đầu trống
+      sender: 'ai',
+      timestamp: new Date()
+    }
+    setMessages(prev => [...prev, aiMessage])
+
     try {
-      // Prepare history for Gemini
+      // Chuẩn bị lịch sử cho Gemini - LOẠI BỎ tin nhắn chào mừng và tin nhắn AI hiện tại (đang trống)
       const history = messages
-        .filter(m => m.id !== '1')
+        .filter(m => m.id !== '1' && m.id !== aiMessageId && m.text.trim() !== '')
         .map(m => ({
           role: m.sender === 'user' ? 'user' : 'model',
           parts: [{ text: m.text }]
         }))
 
-      const { aiApi } = await import('../api/ai')
-      const response = await aiApi.chat(userText, history)
-      
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.data.message || 'Tôi xin lỗi, tôi gặp chút trục trặc khi suy nghĩ.',
-        sender: 'ai',
-        timestamp: new Date()
+      // Sử dụng fetch để đọc stream dữ liệu - Đổi từ /api/ai/chat thành /ai/chat
+      const response = await fetch('/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText, history })
+      });
+
+      if (!response.ok) throw new Error('Cảnh báo: Kết nối AI bị gián đoạn.');
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let streamedText = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          streamedText += chunk;
+          
+          // Cập nhật nội dung tin nhắn AI liên tục
+          setMessages(prev => prev.map(m => 
+            m.id === aiMessageId ? { ...m, text: streamedText } : m
+          ));
+        }
       }
-      setMessages(prev => [...prev, aiMessage])
     } catch (err: any) {
       console.error('AI Chat Error:', err)
-      
-      // Get error message from server if available
-      const serverError = err.response?.data?.error || err.response?.data?.message;
-      
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: serverError 
-          ? `Lỗi hệ thống: ${serverError}` 
-          : 'Rất tiếc, tôi đang mất kết nối với máy chủ AI. Bạn vui lòng kiểm tra KEY AI trong .env backend nhé!',
-        sender: 'ai',
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages(prev => prev.map(m => 
+        m.id === aiMessageId ? { ...m, text: 'Rất tiếc, tôi đang mất kết nối với máy chủ AI. Bạn hãy thử lại sau nhé!' } : m
+      ));
     } finally {
       setIsLoading(false)
     }
   }
+
 
   return (
     <div className="fixed bottom-8 right-8 z-[60] flex flex-col items-end">
