@@ -2,10 +2,6 @@ import React from 'react';
 import { View, Text, ImageBackground, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Zap, Users, Activity, Cpu } from 'lucide-react-native';
-import { styled } from 'nativewind';
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
 
 const { width } = Dimensions.get('window');
 
@@ -37,14 +33,17 @@ export default function LandingPage({ navigation }) {
 
           <View className="w-full gap-4">
             <TouchableOpacity 
-              className="bg-primary py-4 rounded-full items-center shadow-lg shadow-primary/30"
-              onPress={() => navigation.navigate('Rooms')}
+              className="bg-blue-600 py-4 rounded-full items-center shadow-lg shadow-blue-200"
+              onPress={() => navigation.navigate('Main', { screen: 'Explore' })}
             >
               <Text className="text-white font-black text-lg">Tìm phòng ngay</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity className="bg-slate-900/40 border border-white/10 py-4 rounded-full items-center">
-              <Text className="text-white font-black text-lg">Hợp tác cho chủ nhà</Text>
+            <TouchableOpacity 
+              className="bg-slate-900/40 border border-white/10 py-4 rounded-full items-center"
+              onPress={() => navigation.navigate('Login')}
+            >
+              <Text className="text-white font-black text-lg">Đăng nhập ngay</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
