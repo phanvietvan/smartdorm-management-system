@@ -41,7 +41,7 @@ export default function MainNavbar() {
       initial={{ y: 0 }}
       animate={{ y: isVisible ? 0 : -110 }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      className="fixed top-0 w-full z-[100] bg-white/40 dark:bg-slate-950/40 backdrop-blur-3xl shadow-[0_8px_60px_rgba(0,0,0,0.02)] border-b border-white/10 dark:border-slate-800/20 px-12 pointer-events-auto"
+      className="fixed top-0 w-full z-[100] bg-white/60 dark:bg-slate-950/60 backdrop-blur-2xl shadow-[0_8px_60px_rgba(0,0,0,0.02)] border-b border-white/20 dark:border-slate-800/20 px-12 pointer-events-auto"
     >
       <div className="flex justify-between items-center h-20 max-w-7xl mx-auto relative">
         {/* Left: Logo - Limited width to prevent overlap */}
@@ -55,19 +55,19 @@ export default function MainNavbar() {
         <div className="flex-1 hidden md:flex justify-center">
           <div className="flex gap-16 lg:gap-24 font-['Plus_Jakarta_Sans']">
             <Link 
-              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isHome ? 'text-[#4b49cb] dark:text-indigo-400 border-b-2 border-[#4b49cb] pb-1' : 'text-[#595c5e] dark:text-slate-400 hover:text-[#4b49cb]'}`} 
+              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isHome ? 'text-primary dark:text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'}`} 
               to="/"
             >
               Giới thiệu
             </Link>
             <Link 
-              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isRooms ? 'text-[#4b49cb] dark:text-indigo-400 border-b-2 border-[#4b49cb] pb-1' : 'text-[#595c5e] dark:text-slate-400 hover:text-[#4b49cb]'}`} 
+              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isRooms ? 'text-primary dark:text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'}`} 
               to="/rooms-available"
             >
               Tìm phòng
             </Link>
             <Link 
-              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isApps ? 'text-[#4b49cb] dark:text-indigo-400 border-b-2 border-[#4b49cb] pb-1' : 'text-[#595c5e] dark:text-slate-400 hover:text-[#4b49cb]'}`} 
+              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isApps ? 'text-primary dark:text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'}`} 
               to="/apps"
             >
               Ứng dụng
@@ -100,10 +100,10 @@ export default function MainNavbar() {
              </div>
           ) : (
             <div className="flex items-center gap-4 text-nowrap relative z-50">
-              <Link to="/login" className="text-sm font-bold text-[#595c5e] dark:text-slate-400 hover:text-[#4b49cb] px-2 py-1">Login</Link>
+              <Link to="/login" className="text-sm font-bold text-on-surface-variant hover:text-primary px-2 py-1">Login</Link>
               <Link 
                 to="/register" 
-                className="px-6 py-2.5 bg-[#4b49cb] text-white rounded-full text-xs font-black shadow-[0_10px_20px_rgba(75,73,203,0.3)] hover:scale-105 transition-all outline-none"
+                className="px-6 py-2.5 bg-primary text-white rounded-full text-xs font-black shadow-[0_10px_20px_rgba(92,89,240,0.3)] hover:shadow-primary/40 hover:scale-105 transition-all outline-none"
               >
                 Tham gia ngay
               </Link>

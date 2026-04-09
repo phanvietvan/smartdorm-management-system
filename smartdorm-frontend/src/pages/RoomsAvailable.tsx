@@ -81,11 +81,11 @@ export default function RoomsAvailable() {
             className="relative z-10 w-full max-w-5xl px-6 text-center"
           >
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white drop-shadow-2xl mb-8 -translate-y-4">
-              Tìm Kiếm & Trải Nghiệm <br/><span className="text-secondary-container">Không Gian Sống Thông Minh</span>
+              Tìm Kiếm & Trải Nghiệm <br/><span className="text-secondary-container drop-shadow-[0_0_30px_rgba(197,196,254,0.5)]">Không Gian Sống Thông Minh</span>
             </h1>
             
             {/* Sophisticated Search Bar - Repurposed for SmartDorm */}
-            <div className="bg-white/70 backdrop-blur-2xl rounded-2xl p-2 shadow-[0_20px_40px_rgba(27,27,35,0.1)] flex flex-col md:flex-row gap-2 max-w-4xl mx-auto border border-white/20">
+            <div className="bg-white/90 backdrop-blur-2xl rounded-2xl p-2 shadow-[0_30px_60px_rgba(92,89,240,0.2)] flex flex-col md:flex-row gap-2 max-w-4xl mx-auto border border-white">
               <div className="flex-1 flex items-center px-4 py-3 border-r-0 md:border-r border-outline-variant/30">
                 <span className="material-symbols-outlined text-primary mr-3">location_on</span>
                 <div className="text-left">
@@ -174,8 +174,8 @@ export default function RoomsAvailable() {
                         src={ASSETS.ROOM_DEMO} 
                         alt={r.name} 
                       />
-                      <div className="absolute top-6 left-6 bg-primary-container/90 backdrop-blur-md text-on-primary text-[10px] font-black uppercase tracking-widest px-5 py-2 rounded-full shadow-lg">
-                        {i % 2 === 0 ? 'Dành Cho Giới Thượng Lưu' : 'Tuyển Chọn Di Sản'}
+                      <div className="absolute top-6 left-6 bg-primary text-white text-[10px] font-black uppercase tracking-widest px-5 py-2 rounded-full shadow-lg">
+                        {i % 2 === 0 ? 'Smart Living Choice' : 'Premium Selection'}
                       </div>
                       <div className="absolute top-6 right-6">
                         <button className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md hover:bg-white/40 text-white flex items-center justify-center transition-all">
@@ -267,15 +267,15 @@ export default function RoomsAvailable() {
       <footer className="w-full border-t border-outline-variant/15 bg-surface-container-low">
         <div className="max-w-[1700px] mx-auto px-12 py-32 flex flex-col items-center space-y-12">
           <div className="flex flex-col items-center gap-4">
-            <span className="text-4xl font-black text-primary tracking-tighter italic">LUMINOUS</span>
-            <div className="w-12 h-1 bg-primary/20 rounded-full"></div>
+            <span className="text-4xl font-black text-primary tracking-tighter italic uppercase">SmartDorm</span>
+            <div className="w-12 h-1 bg-primary/30 rounded-full"></div>
           </div>
           <div className="flex flex-wrap justify-center gap-10 md:gap-20">
             {['Privacy Policy', 'Terms of Service', 'Cookie Settings', 'Press Kit'].map(l => (
               <a key={l} className="text-xs font-black uppercase tracking-[0.2em] text-outline hover:text-primary transition-colors italic" href="#">{l}</a>
             ))}
           </div>
-          <p className="text-sm font-bold text-outline uppercase tracking-widest opacity-40">© 2024 Luminous Curator Vietnam. All rights reserved.</p>
+          <p className="text-sm font-bold text-outline uppercase tracking-widest opacity-40">© 2024 SmartDorm Global. All rights reserved.</p>
         </div>
       </footer>
 

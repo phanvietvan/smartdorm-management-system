@@ -7,7 +7,9 @@ import {
   RefreshCcw,
   Rocket,
   Lock,
-  Eye
+  Eye,
+  Activity,
+  Cpu
 } from 'lucide-react'
 import AIChatBot from '../components/AIChatBot'
 import MainNavbar from '../components/MainNavbar'
@@ -70,39 +72,59 @@ export default function LandingPage() {
               transition={{ delay: 0.3 }}
               className="flex flex-col md:flex-row gap-4 justify-center pt-8"
             >
-              <Link to="/rooms-available" className="px-10 py-5 bg-[#4b49cb] text-white rounded-2xl font-black text-lg shadow-2xl shadow-[#4b49cb]/20 hover:scale-[1.02] active:scale-95 transition-all outline-none">
+              <Link to="/rooms-available" className="px-12 py-4.5 bg-primary text-white rounded-full font-black text-lg shadow-2xl shadow-primary/20 hover:scale-[1.05] active:scale-95 transition-all outline-none flex items-center justify-center">
                 Tìm phòng ngay
               </Link>
-              <Link to="/register" className="px-10 py-5 bg-white dark:bg-slate-800 border border-[#abadb0]/20 text-[#2c2f31] dark:text-white rounded-2xl font-black text-lg hover:bg-[#eff1f4] dark:hover:bg-slate-700 transition-colors text-center flex items-center justify-center outline-none">
+              <Link to="/register" className="px-12 py-4.5 bg-slate-900/40 backdrop-blur-xl border border-white/10 text-white rounded-full font-bold text-lg hover:bg-slate-900/60 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all text-center flex items-center justify-center outline-none">
                 Hợp tác cho chủ nhà
               </Link>
             </motion.div>
           </div>
 
-          {/* Floating Stats Card */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-5xl px-6 z-20">
+          {/* Upsized Slender Pill Stats Card */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-4xl px-6 z-20">
             <motion.div 
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, type: 'spring', damping: 20 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-10 shadow-[0_32px_64px_rgba(0,0,0,0.08)] border border-white/40 dark:border-slate-800"
+              className="bg-white/70 dark:bg-slate-950/70 backdrop-blur-3xl rounded-full py-4 px-10 shadow-[0_30px_60px_rgba(0,0,0,0.15)] border border-white/40 dark:border-slate-800/50"
             >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div className="space-y-1">
-                  <p className="text-[10px] text-[#973774] font-black tracking-widest uppercase">Hiệu suất</p>
-                  <p className="text-3xl font-black tracking-tighter">+45%</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-slate-500/10">
+                <div className="flex items-center gap-4 px-6">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Zap size={18} strokeWidth={2.5} />
+                  </div>
+                  <div className="space-y-0 text-left">
+                    <p className="text-[9px] text-primary font-black tracking-widest uppercase mb-0.5">Hiệu suất</p>
+                    <p className="text-2xl font-black tracking-tighter text-on-surface leading-none">+45%</p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] text-[#4b49cb] font-black tracking-widest uppercase">Cư dân</p>
-                  <p className="text-3xl font-black tracking-tighter">2k+</p>
+                <div className="flex items-center gap-4 px-6">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                    <Users size={18} strokeWidth={2.5} />
+                  </div>
+                  <div className="space-y-0 text-left">
+                    <p className="text-[9px] text-secondary font-black tracking-widest uppercase mb-0.5">Cư dân</p>
+                    <p className="text-2xl font-black tracking-tighter text-on-surface leading-none">2k+</p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] text-[#3a45ad] font-black tracking-widest uppercase">Vận hành</p>
-                  <p className="text-3xl font-black tracking-tighter">24/7</p>
+                <div className="flex items-center gap-4 px-6">
+                  <div className="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
+                    <Activity size={18} strokeWidth={2.5} />
+                  </div>
+                  <div className="space-y-0 text-left">
+                    <p className="text-[9px] text-tertiary font-black tracking-widest uppercase mb-0.5">Vận hành</p>
+                    <p className="text-2xl font-black tracking-tighter text-on-surface leading-none">24/7</p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] text-[#a70138] font-black tracking-widest uppercase">Tự động</p>
-                  <p className="text-3xl font-black tracking-tighter">98%</p>
+                <div className="flex items-center gap-4 px-6">
+                  <div className="w-10 h-10 rounded-xl bg-error/10 flex items-center justify-center text-error">
+                    <Cpu size={18} strokeWidth={2.5} />
+                  </div>
+                  <div className="space-y-0 text-left">
+                    <p className="text-[9px] text-error font-black tracking-widest uppercase mb-0.5">Tự động</p>
+                    <p className="text-2xl font-black tracking-tighter text-on-surface leading-none">98%</p>
+                  </div>
                 </div>
               </div>
             </motion.div>
