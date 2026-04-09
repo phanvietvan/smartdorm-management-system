@@ -8,6 +8,37 @@ const socketUtil = require("./utils/socket");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 
+const app = express();
+const server = http.createServer(app);
+
+// 1. CORS PHẢI Ở TRÊN CÙNG
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:8081",
+  "https://smartdorm-management-system-sooty.vercel.app",
+  "https://lenard-subentire-acknowledgingly.ngrok-free.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Cho phép các origin trong whitelist hoặc không có origin (như Postman/Mobile App thật)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log("CORS Blocked for origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"]
+}));
+
+// 2. Middleware cơ bản
+app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Register models
 require("./models/User");
 require("./models/Room");
@@ -37,21 +68,8 @@ const uploadRoutes = require("./routes/upload");
 const rentalRequestRoutes = require("./routes/rentalRequests");
 const aiRoutes = require("./routes/aiRoutes");
 
-const app = express();
-const server = http.createServer(app);
-
 // Initialize Socket.io
 socketUtil.init(server);
-
-// Middleware
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
-  credentials: true
-}));
-app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // --- MongoDB Connection ---
 const DB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/smartdorm";
@@ -83,37 +101,19 @@ app.use("/upload", uploadRoutes);
 app.use("/rental-requests", rentalRequestRoutes);
 app.use("/ai", aiRoutes);
 
-// --- Push Route --- (New)
+// --- Push Route ---
 app.post("/push/subscribe", require("./middleware/auth").authenticate, async (req, res) => {
   try {
     const { subscription } = req.body;
     if (!subscription) return res.status(400).json({ message: "Subscription is required" });
-    
-    // Add to user's pushSubscriptions if not already exists
     const User = require("./models/User");
     const user = await User.findById(req.user._id);
-    
-    // Simple deduplication based on endpoint
     const exists = user.pushSubscriptions.some(s => s.endpoint === subscription.endpoint);
     if (!exists) {
       user.pushSubscriptions.push(subscription);
       await user.save();
     }
-    
     res.status(201).json({ success: true });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.delete("/push/unsubscribe", require("./middleware/auth").authenticate, async (req, res) => {
-  try {
-    const { endpoint } = req.body;
-    const User = require("./models/User");
-    const user = await User.findById(req.user._id);
-    user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== endpoint);
-    await user.save();
-    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

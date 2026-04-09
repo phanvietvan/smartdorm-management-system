@@ -1,131 +1,203 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator, Image
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, ArrowRight, User } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight } from 'lucide-react-native';
+import { useAuth } from '../../context/AuthContext';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authApi } from '../../api/auth';
+import client from '../../api/client';
+
+// Quan trọng: cần gọi cái này để WebBrowser hoạt động đúng trên mobile
+WebBrowser.maybeCompleteAuthSession();
+
+// Google Client IDs - Sử dụng chung Web Client ID để test local đồng bộ
+const GOOGLE_CLIENT_ID_ANDROID = '1742339132-c1ct4i9hosca704jg01lqn25u7isjsjt.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID_IOS     = '1742339132-c1ct4i9hosca704jg01lqn25u7isjsjt.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID_WEB     = '1742339132-c1ct4i9hosca704jg01lqn25u7isjsjt.apps.googleusercontent.com';
 
 export default function LoginScreen({ navigation }) {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: GOOGLE_CLIENT_ID_ANDROID,
+    iosClientId: GOOGLE_CLIENT_ID_IOS,
+    webClientId: GOOGLE_CLIENT_ID_WEB,
+    scopes: ['profile', 'email'],
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      handleGoogleResponse(response);
+    } else if (response?.type === 'error') {
+      Alert.alert('Lỗi Google', response.error?.message || 'Đăng nhập Google thất bại');
+    }
+  }, [response]);
+
+  const handleGoogleResponse = async (res) => {
+    setGoogleLoading(true);
+    try {
+      const { authentication } = res;
+      if (!authentication?.accessToken) {
+        throw new Error('Không nhận được access token từ Google');
+      }
+
+      // Lấy thông tin user từ Google bằng access token
+      const userInfoRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+        headers: { Authorization: `Bearer ${authentication.accessToken}` },
+      });
+      const userInfo = await userInfoRes.json();
+
+      // Gửi id_token hoặc dùng access token để xác thực với backend
+      // Backend nhận credential = ID Token. Với Expo, ta dùng idToken nếu có, hoặc fallback
+      const credential = authentication.idToken || authentication.accessToken;
+
+      const backendRes = await client.post('/auth/google', { credential });
+      const { token, user } = backendRes.data;
+
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+
+      // Quan trọng: Phải chuyển sang Main
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      });
+    } catch (error) {
+      console.error('Google login error:', error);
+      const msg = error.response?.data?.message || error.message || 'Đăng nhập Google thất bại';
+      Alert.alert('Lỗi đăng nhập Google', msg);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
     setLoading(true);
     try {
-      const response = await authApi.login({ email, password });
-      
-      // Lưu token vào bộ nhớ máy
-      if (response.data && response.data.token) {
-        await AsyncStorage.setItem('token', response.data.token);
-        // Có thể lưu thêm thông tin user nếu cần
-        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        Alert.alert("Thành công", `Chào mừng ${response.data.user?.name || ''} quay lại!`);
-        navigation.navigate('Main');
-      } else {
-        throw new Error("Không nhận được token từ hệ thống");
-      }
+      await login(email, password);
+      navigation.replace('Main');
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Thông tin đăng nhập không chính xác hoặc lỗi hệ thống";
-      Alert.alert("Lỗi đăng nhập", errorMsg);
+      const msg = error.response?.data?.message || 'Thông tin đăng nhập không chính xác';
+      Alert.alert('Đăng nhập thất bại', msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-      >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="px-8 pt-12">
-          {/* Logo/Brand Area */}
-          <View className="items-center mb-10">
-            <View className="bg-blue-600 w-16 h-16 rounded-3xl items-center justify-center shadow-lg shadow-blue-200">
-              <Text className="text-white text-3xl font-black">SD</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 32, paddingTop: 48 }}>
+          {/* Brand */}
+          <View style={{ alignItems: 'center', marginBottom: 40 }}>
+            <View style={{ backgroundColor: '#2563eb', width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', shadowColor: '#2563eb', shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 }}>
+              <Text style={{ color: 'white', fontSize: 24, fontWeight: '900' }}>SD</Text>
             </View>
-            <Text className="text-2xl font-black text-slate-900 mt-4 tracking-tighter uppercase">SMARTDORM</Text>
-            <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em]">Management System</Text>
+            <Text style={{ fontSize: 22, fontWeight: '900', color: '#0f172a', marginTop: 16, letterSpacing: -0.5 }}>SMARTDORM</Text>
+            <Text style={{ fontSize: 10, color: '#94a3b8', fontWeight: '700', letterSpacing: 4 }}>MANAGEMENT SYSTEM</Text>
           </View>
 
-          <View className="mb-8">
-            <Text className="text-3xl font-black text-slate-900 tracking-tighter">Chào mừng bạn!</Text>
-            <Text className="text-slate-500 font-medium mt-1">Nhập thông tin đăng nhập để tiếp tục.</Text>
-          </View>
+          <Text style={{ fontSize: 28, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5, marginBottom: 4 }}>Chào mừng bạn!</Text>
+          <Text style={{ color: '#64748b', fontWeight: '500', marginBottom: 32 }}>Nhập thông tin đăng nhập để tiếp tục.</Text>
 
-          <View className="space-y-6">
-            <View>
-              <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2 ml-1">Email của bạn</Text>
-              <View className="flex-row items-center bg-slate-50 rounded-2xl px-4 border border-slate-100 h-14">
-                <Mail size={18} color="#94a3b8" />
-                <TextInput 
-                  className="flex-1 ml-3 font-bold text-slate-900"
-                  placeholder="name@example.com"
-                  placeholderTextColor="#cbd5e1"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
-
-            <View className="mt-4">
-              <View className="flex-row justify-between items-center mb-2 px-1">
-                 <Text className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Mật khẩu</Text>
-                 <TouchableOpacity>
-                    <Text className="text-blue-600 font-bold text-xs">Quên mật khẩu?</Text>
-                 </TouchableOpacity>
-              </View>
-              <View className="flex-row items-center bg-slate-50 rounded-2xl px-4 border border-slate-100 h-14">
-                <Lock size={18} color="#94a3b8" />
-                <TextInput 
-                  className="flex-1 ml-3 font-bold text-slate-900"
-                  placeholder="••••••••"
-                  placeholderTextColor="#cbd5e1"
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
-                />
-              </View>
-            </View>
-
-            <TouchableOpacity 
-              className={`bg-blue-600 h-14 rounded-2xl flex-row items-center justify-center shadow-xl shadow-blue-100 mt-6 ${loading ? 'opacity-70' : ''}`}
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              <Text className="text-white font-black text-lg mr-2 uppercase">Đăng nhập</Text>
-              <ArrowRight size={20} color="white" />
-            </TouchableOpacity>
-          </View>
-
-          <View className="flex-row items-center my-10">
-            <View className="flex-1 h-[1px] bg-slate-100" />
-            <Text className="mx-4 text-slate-400 font-black text-[10px] uppercase tracking-widest">Hoặc tiếp tục với</Text>
-            <View className="flex-1 h-[1px] bg-slate-100" />
-          </View>
-
-          {/* Social login Button */}
-          <TouchableOpacity 
-            className="flex-row items-center justify-center bg-white border-2 border-slate-100 h-14 rounded-2xl shadow-sm"
-          >
-            <Image 
-              source={{ uri: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg' }} 
-              className="w-5 h-5 mr-3"
+          {/* Email */}
+          <Text style={{ color: '#64748b', fontSize: 10, fontWeight: '800', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>Email của bạn</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 16, paddingHorizontal: 16, borderWidth: 1, borderColor: '#e2e8f0', height: 56, marginBottom: 20 }}>
+            <Mail size={18} color="#94a3b8" />
+            <TextInput
+              style={{ flex: 1, marginLeft: 12, fontWeight: '600', color: '#0f172a', fontSize: 15 }}
+              placeholder="name@example.com"
+              placeholderTextColor="#cbd5e1"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
-            <Text className="text-slate-900 font-bold text-lg">Google Account</Text>
+          </View>
+
+          {/* Password */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingHorizontal: 4 }}>
+            <Text style={{ color: '#64748b', fontSize: 10, fontWeight: '800', letterSpacing: 2, textTransform: 'uppercase' }}>Mật khẩu</Text>
+            <TouchableOpacity><Text style={{ color: '#2563eb', fontWeight: '700', fontSize: 12 }}>Quên mật khẩu?</Text></TouchableOpacity>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 16, paddingHorizontal: 16, borderWidth: 1, borderColor: '#e2e8f0', height: 56, marginBottom: 32 }}>
+            <Lock size={18} color="#94a3b8" />
+            <TextInput
+              style={{ flex: 1, marginLeft: 12, fontWeight: '600', color: '#0f172a', fontSize: 15 }}
+              placeholder="••••••••"
+              placeholderTextColor="#cbd5e1"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+          </View>
+
+          {/* Login Button */}
+          <TouchableOpacity
+            style={{ backgroundColor: '#2563eb', height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', opacity: loading ? 0.7 : 1, shadowColor: '#2563eb', shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 }}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Text style={{ color: 'white', fontWeight: '900', fontSize: 16, marginRight: 8, textTransform: 'uppercase' }}>Đăng nhập</Text>
+                <ArrowRight size={20} color="white" />
+              </>
+            )}
           </TouchableOpacity>
 
-          <View className="flex-row justify-center mt-10 mb-8">
-            <Text className="text-slate-500 font-bold">Bạn mới đến đây?</Text>
+          {/* Divider */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 28 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: '#e2e8f0' }} />
+            <Text style={{ marginHorizontal: 16, color: '#94a3b8', fontWeight: '800', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5 }}>Hoặc tiếp tục với</Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: '#e2e8f0' }} />
+          </View>
+
+          {/* Google Login Button */}
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: 'white', height: 56, borderRadius: 16,
+              borderWidth: 1.5, borderColor: '#e2e8f0',
+              shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+              opacity: (!request || googleLoading) ? 0.7 : 1,
+            }}
+            onPress={() => promptAsync()}
+            disabled={!request || googleLoading}
+          >
+            {googleLoading ? (
+              <ActivityIndicator color="#4285f4" />
+            ) : (
+              <>
+                {/* Google G Logo bằng text màu */}
+                <View style={{ width: 24, height: 24, marginRight: 12, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 18, fontWeight: '900', color: '#4285f4' }}>G</Text>
+                </View>
+                <Text style={{ color: '#0f172a', fontWeight: '800', fontSize: 15 }}>Đăng nhập với Google</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Register link */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 28, marginBottom: 32 }}>
+            <Text style={{ color: '#64748b', fontWeight: '600' }}>Bạn mới đến đây? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text className="text-blue-600 font-black ml-1 uppercase">Tạo tài khoản ngay</Text>
+              <Text style={{ color: '#2563eb', fontWeight: '900', textTransform: 'uppercase' }}>Tạo tài khoản ngay</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

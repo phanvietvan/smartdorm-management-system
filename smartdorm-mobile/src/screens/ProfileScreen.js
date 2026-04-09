@@ -1,59 +1,154 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
-import { User, Settings, LogOut, Shield, CreditCard, Bell, ChevronRight } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl, activityIndicator, ActivityIndicator, TextInput, Switch
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { User, LogOut, Lock, Phone, Edit2, ChevronRight, Bell, Shield, Home } from 'lucide-react-native';
+import { useAuth } from '../context/AuthContext';
+import { usersApi } from '../api';
 
-const ProfileScreen = ({ navigation }) => {
-  const menuItems = [
-    { icon: User, label: 'Thông tin cá nhân', color: 'bg-blue-100', iconColor: '#2563eb' },
-    { icon: Bell, label: 'Thông báo', color: 'bg-emerald-100', iconColor: '#059669' },
-    { icon: CreditCard, label: 'Phương thức thanh toán', color: 'bg-purple-100', iconColor: '#9333ea' },
-    { icon: Shield, label: 'Bảo mật', color: 'bg-orange-100', iconColor: '#f97316' },
-  ];
+export default function ProfileScreen({ navigation }) {
+  const { user, logout, refreshUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [saving, setSaving] = useState(false);
+
+  const handleLogout = () => {
+    Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Đăng xuất', style: 'destructive', onPress: async () => {
+          await logout();
+          navigation.replace('Login');
+        }
+      }
+    ]);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!fullName) {
+      Alert.alert('Lỗi', 'Họ tên không được để trống');
+      return;
+    }
+    setSaving(true);
+    try {
+      await usersApi.updateProfile({ fullName, phone });
+      await refreshUser();
+      setEditing(false);
+      Alert.alert('Thành công', 'Cập nhật hồ sơ thành công');
+    } catch (e) {
+      Alert.alert('Lỗi', e.response?.data?.message || 'Không thể cập nhật');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const ROLE_LABEL = { admin: 'Quản trị viên', tenant: 'Người thuê', manager: 'Quản lý', landlord: 'Chủ trọ', guest: 'Khách' };
+  const roleLabel = ROLE_LABEL[user?.role] || 'Khách';
+  const initials = (user?.fullName || '?').split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 pt-12">
-      <View className="px-6 items-center mb-10">
-        <View className="relative">
-          <View className="w-28 h-28 rounded-full bg-gray-200 border-4 border-white shadow-sm overflow-hidden">
-            <View className="flex-1 items-center justify-center bg-blue-600">
-               <Text className="text-white text-4xl font-bold">JD</Text>
-            </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Avatar section */}
+        <View style={{ alignItems: 'center', paddingTop: 36, paddingBottom: 28, backgroundColor: 'white', borderBottomLeftRadius: 28, borderBottomRightRadius: 28, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 12, elevation: 3, marginBottom: 20 }}>
+          <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center', shadowColor: '#2563eb', shadowOpacity: 0.35, shadowRadius: 14, elevation: 8 }}>
+            <Text style={{ color: 'white', fontSize: 28, fontWeight: '900' }}>{initials}</Text>
           </View>
-          <TouchableOpacity className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md">
-            <Settings size={18} color="#4b5563" />
+          <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a', marginTop: 14, letterSpacing: -0.3 }}>{user?.fullName}</Text>
+          <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20, marginTop: 6 }}>
+            <Text style={{ color: '#2563eb', fontWeight: '700', fontSize: 12 }}>{roleLabel}</Text>
+          </View>
+          {user?.roomId && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+              <Home size={14} color="#94a3b8" />
+              <Text style={{ color: '#94a3b8', fontSize: 13, fontWeight: '600', marginLeft: 6 }}>
+                Phòng {typeof user.roomId === 'object' ? user.roomId.name : user.roomId}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={{ paddingHorizontal: 20 }}>
+          {/* Profile info edit */}
+          <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontWeight: '900', color: '#0f172a', fontSize: 15 }}>Thông tin cá nhân</Text>
+              <TouchableOpacity onPress={() => setEditing(!editing)}>
+                <Edit2 size={18} color="#2563eb" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ color: '#94a3b8', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Email</Text>
+            <Text style={{ fontWeight: '700', color: '#0f172a', fontSize: 14, marginBottom: 16 }}>{user?.email}</Text>
+
+            <Text style={{ color: '#94a3b8', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Họ và tên</Text>
+            {editing ? (
+              <TextInput
+                style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, fontSize: 14, fontWeight: '600', color: '#0f172a', borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 16 }}
+                value={fullName}
+                onChangeText={setFullName}
+              />
+            ) : (
+              <Text style={{ fontWeight: '700', color: '#0f172a', fontSize: 14, marginBottom: 16 }}>{user?.fullName}</Text>
+            )}
+
+            <Text style={{ color: '#94a3b8', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Số điện thoại</Text>
+            {editing ? (
+              <TextInput
+                style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, fontSize: 14, fontWeight: '600', color: '#0f172a', borderWidth: 1, borderColor: '#e2e8f0' }}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+              />
+            ) : (
+              <Text style={{ fontWeight: '700', color: '#0f172a', fontSize: 14 }}>{user?.phone || 'Chưa cập nhật'}</Text>
+            )}
+
+            {editing && (
+              <TouchableOpacity
+                style={{ backgroundColor: '#2563eb', padding: 14, borderRadius: 14, alignItems: 'center', marginTop: 16, opacity: saving ? 0.7 : 1 }}
+                onPress={handleSaveProfile}
+                disabled={saving}
+              >
+                {saving ? <ActivityIndicator color="white" /> : <Text style={{ color: 'white', fontWeight: '900' }}>Lưu thay đổi</Text>}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Menu items */}
+          {[
+            { icon: Bell, label: 'Thông báo', color: '#eff6ff', iconColor: '#2563eb', screen: 'Notifications' },
+            { icon: Lock, label: 'Đổi mật khẩu', color: '#f0fdf4', iconColor: '#16a34a' },
+            { icon: Shield, label: 'Bảo mật', color: '#fdf4ff', iconColor: '#9333ea' },
+          ].map((item, idx) => (
+            <TouchableOpacity
+              key={idx}
+              style={{ backgroundColor: 'white', padding: 18, borderRadius: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 }}
+              onPress={() => item.screen && navigation.navigate(item.screen)}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ backgroundColor: item.color, padding: 10, borderRadius: 14, marginRight: 14 }}>
+                  <item.icon size={20} color={item.iconColor} />
+                </View>
+                <Text style={{ fontWeight: '700', color: '#0f172a', fontSize: 15 }}>{item.label}</Text>
+              </View>
+              <ChevronRight size={18} color="#94a3b8" />
+            </TouchableOpacity>
+          ))}
+
+          {/* Logout */}
+          <TouchableOpacity
+            style={{ marginTop: 12, backgroundColor: '#fef2f2', padding: 18, borderRadius: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#fecaca' }}
+            onPress={handleLogout}
+          >
+            <LogOut size={20} color="#dc2626" />
+            <Text style={{ color: '#dc2626', fontWeight: '900', fontSize: 15, marginLeft: 10 }}>Đăng xuất</Text>
           </TouchableOpacity>
         </View>
-        <Text className="mt-4 text-2xl font-bold text-gray-900">John Doe</Text>
-        <Text className="text-gray-500">Phòng 402 - Tòa A</Text>
-      </View>
-
-      <View className="px-6 space-y-4">
-        {menuItems.map((item, index) => (
-          <TouchableOpacity 
-            key={index}
-            className="bg-white p-4 rounded-3xl flex-row items-center justify-between mb-4 shadow-sm border border-gray-100"
-          >
-            <View className="flex-row items-center">
-              <View className={`${item.color} p-3 rounded-2xl mr-4`}>
-                <item.icon size={22} color={item.iconColor} />
-              </View>
-              <Text className="text-gray-900 font-semibold text-lg">{item.label}</Text>
-            </View>
-            <ChevronRight size={18} color="#9ca3af" />
-          </TouchableOpacity>
-        ))}
-
-        <TouchableOpacity 
-          className="mt-8 bg-red-50 p-4 rounded-3xl flex-row items-center justify-center border border-red-100"
-          onPress={() => navigation.navigate('Login')}
-        >
-          <LogOut size={20} color="#dc2626" className="mr-2" />
-          <Text className="text-red-600 font-bold text-lg ml-2">Đăng xuất</Text>
-        </TouchableOpacity>
-      </View>
-      <View className="h-20" />
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
-};
-
-export default ProfileScreen;
+}
