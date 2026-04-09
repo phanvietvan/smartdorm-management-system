@@ -53,24 +53,33 @@ export default function MainNavbar() {
         
         {/* Center: Menu - Flex-1 with justify-center to keep it centered */}
         <div className="flex-1 hidden md:flex justify-center">
-          <div className="flex gap-16 lg:gap-24 font-['Plus_Jakarta_Sans']">
+          <div className="flex gap-10 lg:gap-14 font-['Plus_Jakarta_Sans']">
+            {[
+              { label: 'Giới thiệu', id: 'top' },
+              { label: 'Vận hành', id: 'operation-core' },
+              { label: 'Hệ thống', id: 'portal-command' },
+              { label: 'Ứng dụng', id: 'digital-operations' }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (path === '/') {
+                    document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    window.location.href = `/#${item.id}`;
+                  }
+                }}
+                className="transition-all font-bold tracking-tight text-xs lg:text-sm px-2 text-on-surface-variant hover:text-primary relative group uppercase tracking-widest"
+              >
+                {item.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+              </button>
+            ))}
             <Link 
-              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isHome ? 'text-primary dark:text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'}`} 
-              to="/"
-            >
-              Giới thiệu
-            </Link>
-            <Link 
-              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isRooms ? 'text-primary dark:text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'}`} 
+              className={`transition-colors font-bold tracking-tight text-xs lg:text-sm px-2 uppercase tracking-widest ${isRooms ? 'text-primary' : 'text-on-surface-variant hover:text-primary'}`} 
               to="/rooms-available"
             >
               Tìm phòng
-            </Link>
-            <Link 
-              className={`transition-colors font-bold tracking-tight text-sm px-2 ${isApps ? 'text-primary dark:text-primary border-b-2 border-primary pb-1' : 'text-on-surface-variant hover:text-primary'}`} 
-              to="/apps"
-            >
-              Ứng dụng
             </Link>
           </div>
         </div>

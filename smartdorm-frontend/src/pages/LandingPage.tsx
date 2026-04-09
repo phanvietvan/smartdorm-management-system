@@ -29,7 +29,7 @@ export default function LandingPage() {
 
       <main>
         {/* Hero Section */}
-        <header className="relative h-screen flex items-center justify-center px-6 bg-[#f5f6f9] dark:bg-slate-950 overflow-hidden pb-48">
+        <header id="top" className="relative h-screen flex items-center justify-center px-6 bg-[#f5f6f9] dark:bg-slate-950 overflow-hidden">
           <div className="absolute inset-0 z-0 overflow-hidden text-slate-200">
             <img className="w-full h-full object-cover opacity-100 transition-opacity duration-1000" src={HERO_BG} alt="Hero Background" />
             {/* Minimal Bottom Fade only for transition */}
@@ -132,27 +132,27 @@ export default function LandingPage() {
         </header>
 
         {/* Real-time Tracking Section (Operation Core) */}
-        <section id="operation-core" className="py-32 px-12 bg-[#f5f2fd] dark:bg-slate-900/50 relative overflow-hidden">
-          {/* New subtle network background */}
-          <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
-            <img src="/operation_core_network_bg_1775691229058.png" className="w-full h-full object-cover" alt="network background" />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#f5f2fd] via-transparent to-[#f5f2fd] dark:from-slate-950 dark:to-slate-950"></div>
+        <section id="operation-core" className="px-12 h-screen flex flex-col justify-center bg-slate-950 relative overflow-hidden">
+          {/* Muted premium network background */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <img src="/operation_core_bg.png" className="w-full h-full object-cover opacity-30 mix-blend-lighten" alt="modern network background" />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-transparent to-slate-950"></div>
           </div>
           
           <div className="max-w-[1700px] mx-auto relative z-10">
-            <div className="flex flex-col md:flex-row justify-between items-end gap-12 mb-20">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-12 mb-24">
               <div className="max-w-2xl">
                 <motion.span 
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  className="text-sm font-black text-[#854300] dark:text-orange-400 tracking-[0.2rem] uppercase mb-4 block"
+                  className="text-xs font-black text-indigo-400 tracking-[0.4rem] uppercase mb-6 block"
                 >
                   Operation Core
                 </motion.span>
                 <motion.h2 
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  className="text-5xl md:text-7xl font-black tracking-tighter text-[#1b1b23] dark:text-white"
+                  className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-[0.9]"
                 >
                   Real-time Tracking &<br/> Digital Presence
                 </motion.h2>
@@ -160,31 +160,53 @@ export default function LandingPage() {
               <motion.p 
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
-                className="text-lg text-slate-600 dark:text-slate-400 max-w-sm mb-2 font-bold italic"
+                className="text-xl text-slate-400 max-w-sm mb-2 font-bold italic leading-tight"
               >
                 Giám sát mọi biến động tại cơ sở của bạn với độ trễ gần như bằng không thông qua hệ thống cảm biến thông minh.
               </motion.p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-10">
               {[
-                { icon: <Zap className="w-8 h-8"/>, title: "Smart Metering", desc: "Theo dõi chỉ số điện nước tự động, chốt số cuối tháng trong 1 giây không sai sót." },
-                { icon: <Lock className="w-8 h-8"/>, title: "Access Control", desc: "Mở khóa từ xa, quản lý vân tay và mã PIN cho từng phòng cư dân trực tiếp từ portal." },
-                { icon: <Eye className="w-8 h-8"/>, title: "Security AI", desc: "Phát hiện xâm nhập lạ hoặc hành vi bất thường trực tiếp thông qua camera AI." }
+                { 
+                  icon: <Zap className="w-8 h-8"/>, 
+                  title: "Smart Metering", 
+                  desc: "Theo dõi chỉ số điện nước tự động, chốt số cuối tháng trong 1 giây không sai sót.",
+                  color: "from-blue-500 to-indigo-600"
+                },
+                { 
+                  icon: <Lock className="w-8 h-8"/>, 
+                  title: "Access Control", 
+                  desc: "Mở khóa từ xa, quản lý vân tay và mã PIN cho từng phòng cư dân trực tiếp từ portal.",
+                  color: "from-indigo-600 to-purple-600"
+                },
+                { 
+                  icon: <Eye className="w-8 h-8"/>, 
+                  title: "Security AI", 
+                  desc: "Phát hiện xâm nhập lạ hoặc hành vi bất thường trực tiếp thông qua camera AI.",
+                  color: "from-purple-600 to-pink-600"
+                }
               ].map((feat, i) => (
                 <motion.div 
                   key={i}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="group bg-white dark:bg-slate-800 p-12 rounded-[2.5rem] hover:bg-[#4441c4] transition-all duration-500 hover:translate-y-[-8px] shadow-xl shadow-slate-200/50 dark:shadow-none"
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.8 }}
+                  whileHover={{ y: -12, scale: 1.02 }}
+                  className="group relative bg-white/5 backdrop-blur-3xl p-14 rounded-[3.5rem] transition-all duration-500 border border-white/10 shadow-2xl overflow-hidden"
                 >
-                  <div className="w-16 h-16 rounded-2xl bg-[#4441c4]/10 flex items-center justify-center mb-10 group-hover:bg-white/20 transition-colors text-[#4441c4] group-hover:text-white">
+                  {/* Subtle hover gradient glow */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feat.color} opacity-0 group-hover:opacity-[0.05] transition-opacity duration-500`}></div>
+                  
+                  <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${feat.color} flex items-center justify-center mb-12 text-white shadow-lg shadow-indigo-500/10 group-hover:scale-110 transition-transform duration-500`}>
                     {feat.icon}
                   </div>
-                  <h3 className="text-2xl font-black mb-4 group-hover:text-white tracking-tight">{feat.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 group-hover:text-white/80 leading-relaxed mb-8 font-bold italic">{feat.desc}</p>
-                  <div className="h-1.5 w-12 bg-[#4441c4] group-hover:bg-white/40 transition-colors rounded-full"></div>
+                  
+                  <h3 className="text-3xl font-black mb-6 text-white group-hover:text-indigo-300 transition-colors tracking-tighter uppercase">{feat.title}</h3>
+                  <p className="text-slate-400 group-hover:text-slate-200 leading-relaxed mb-10 font-bold italic text-lg transition-colors">{feat.desc}</p>
+                  
+                  <div className={`h-1.5 w-16 bg-gradient-to-r ${feat.color} rounded-full`}></div>
                 </motion.div>
               ))}
             </div>
@@ -192,65 +214,106 @@ export default function LandingPage() {
         </section>
 
         {/* Technology Showcase (The Portal Command) */}
-        <section id="portal-command" className="py-40 px-12 bg-white dark:bg-slate-950 relative overflow-hidden">
-          <div className="max-w-[1700px] mx-auto relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-24">
-              <motion.h2 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                className="text-6xl md:text-8xl font-black tracking-tighter text-[#1b1b23] dark:text-white mb-8 italic"
+        <section id="portal-command" className="px-12 h-screen flex flex-col justify-center bg-[#f8f9fc] dark:bg-slate-950 relative overflow-hidden">
+          {/* Soothing abstract background pattern */}
+          <div className="absolute inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
+            <img src="/portal_system_bg.png" className="w-full h-full object-cover" alt="abstract tech background" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#f8f9fc] via-transparent to-[#f8f9fc] dark:from-slate-950 dark:to-slate-950"></div>
+          </div>
+
+          <div className="max-w-[1700px] mx-auto relative z-10 w-full flex flex-col items-center">
+            <div className="text-center max-w-4xl mx-auto mb-8">
+              <motion.span 
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                className="text-indigo-500/80 font-black text-[9px] uppercase tracking-[0.4rem] mb-2 block"
               >
-                The Portal Command
+                Control Center
+              </motion.span>
+              <motion.h2 
+                initial={{ opacity: 0, y: -10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                className="text-5xl md:text-7xl font-black tracking-tighter text-[#2a2a35] dark:text-white mb-2 leading-none"
+              >
+                The Portal<span className="italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 ml-3">Command</span>
               </motion.h2>
-              <p className="text-xl text-slate-500 dark:text-slate-400 font-bold italic">Một bảng điều khiển duy nhất cho tất cả các hoạt động. Từ quản lý hợp đồng, hóa đơn đến xử lý khiếu nại cư dân.</p>
+              <p className="text-lg text-slate-500 dark:text-slate-400 font-bold italic leading-tight">Một bảng điều khiển duy nhất cho tất cả các hoạt động.</p>
             </div>
 
-            <div className="relative bg-slate-100 dark:bg-slate-900 rounded-[4rem] p-4 lg:p-12 shadow-2xl overflow-hidden group border border-slate-200 dark:border-slate-800">
-              <div className="bg-white dark:bg-slate-950 rounded-[3rem] overflow-hidden shadow-inner border border-slate-200/50 dark:border-slate-800 aspect-video relative">
-                <img className="w-full h-full object-cover opacity-90 transition-transform duration-1000 group-hover:scale-105" src="/smartdorm_dashboard_ui_3d_1775690957148.png" alt="Dashboard Mockup" />
-                <div className="absolute top-20 right-20 space-y-4">
-                  <motion.div 
-                    whileHover={{ x: -10 }}
-                    className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-[#4441c4]/10 max-w-xs transform translate-x-12 group-hover:translate-x-0 transition-transform duration-1000"
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="w-3 h-3 bg-[#4441c4] rounded-full animate-ping"></span>
-                      <span className="font-black text-xs uppercase tracking-tight">Hợp đồng hết hạn</span>
-                    </div>
-                    <p className="text-3xl font-black text-[#4441c4]">12 Phòng</p>
-                    <p className="text-[10px] text-slate-400 mt-2 italic font-bold">Tự động gửi thông báo gia hạn...</p>
-                  </motion.div>
+            <div className="relative group w-full max-w-5xl">
+              {/* Outer Glow */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-[4rem] blur-3xl opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+              
+              <div className="relative bg-slate-950 rounded-[3rem] p-3 shadow-[0_40px_80px_rgba(0,0,0,0.3)] overflow-hidden border border-white/5">
+                <div className="bg-slate-900 rounded-[2.5rem] overflow-hidden relative aspect-[21/9]">
+                  <img 
+                    className="w-full h-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-105" 
+                    src="/portal_dashboard.png" 
+                    alt="Premium Dashboard Mockup" 
+                  />
+                  
+                  {/* Scaled down Floating Glass Cards */}
+                  <div className="absolute top-6 right-6 space-y-4">
+                    <motion.div 
+                      whileHover={{ scale: 1.05, x: -5 }}
+                      className="bg-white/5 backdrop-blur-3xl p-5 rounded-[1.5rem] shadow-2xl border border-white/10 max-w-[180px] transition-all duration-500"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="font-black text-[8px] text-white/50 uppercase tracking-widest">Hết hạn</span>
+                      </div>
+                      <p className="text-xl font-black text-white tracking-tighter">12 Phòng</p>
+                    </motion.div>
+
+                    <motion.div 
+                      whileHover={{ scale: 1.05, x: -5 }}
+                      className="bg-white/5 backdrop-blur-3xl p-5 rounded-[1.5rem] shadow-2xl border border-white/10 max-w-[180px] transition-all duration-500"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="font-black text-[8px] text-white/50 uppercase tracking-widest">Doanh thu</span>
+                      </div>
+                      <p className="text-xl font-black text-white tracking-tighter">98.5%</p>
+                    </motion.div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="grid lg:grid-cols-4 gap-12 mt-24">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mt-12 w-full">
               {[
-                { n: "01", t: "Quản lý Tập trung", d: "Xử lý 100+ tòa nhà trong một giao diện duy nhất." },
-                { n: "02", t: "Thanh toán Tự động", d: "Tích hợp VNPay, Momo tự động gạch nợ hóa đơn." },
-                { n: "03", t: "Báo cáo Tài chính", d: "Xuất báo cáo P&L thời gian thực chỉ với 1 click." },
-                { n: "04", t: "Hệ sinh thái API", d: "Kết nối dễ dàng với các phần mềm kế toán ERP." }
+                { n: "01", t: "Quản lý Tập trung", d: "Kiểm soát hàng ngàn tệp dữ liệu cư dân chỉ trong vài giây." },
+                { n: "02", t: "Thanh toán Thông minh", d: "Hệ thống tự động đối soát và ghi nhận doanh thu 24/7." },
+                { n: "03", t: "Báo cáo Chuyên sâu", d: "Tự động phân tích xu hướng và dự báo tài chính tương lai." },
+                { n: "04", t: "Tích hợp Đa kênh", d: "Đồng bộ hóa mượt mà với Mobile App và các thiết bị IoT." }
               ].map((item, i) => (
-                <div key={i} className="space-y-4 border-l-2 border-[#4441c4]/20 pl-8 hover:border-[#4441c4] transition-colors">
-                  <span className="text-[#4441c4] font-black text-4xl opacity-50">{item.n}</span>
-                  <h4 className="text-xl font-black tracking-tight">{item.t}</h4>
-                  <p className="text-sm text-slate-500 font-bold italic">{item.d}</p>
-                </div>
+                <motion.div 
+                  key={i} 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="space-y-6 group"
+                >
+                  <span className="text-5xl font-black text-indigo-600/20 group-hover:text-indigo-600 transition-colors duration-500">{item.n}</span>
+                  <div className="space-y-2">
+                    <h4 className="text-2xl font-black tracking-tighter uppercase">{item.t}</h4>
+                    <p className="text-base text-slate-500 dark:text-slate-400 font-bold italic leading-relaxed">{item.d}</p>
+                  </div>
+                </motion.div>
               ))}
             </div>
           </div>
-          <div className="absolute -bottom-[20%] -left-[10%] w-[600px] h-[600px] bg-[#4441c4]/5 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="absolute top-[20%] right-[-10%] w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-[150px] pointer-events-none"></div>
         </section>
 
         {/* Digital Operations Bento Grid */}
-        <section id="digital-operations" className="py-32 px-12 bg-[#f5f2fd] dark:bg-slate-900/50">
-          <div className="max-w-[1700px] mx-auto">
-            <div className="mb-20 space-y-4">
+        <section id="digital-operations" className="px-12 h-screen flex flex-col justify-center bg-[#f5f2fd] dark:bg-slate-900/50">
+          <div className="max-w-[1700px] mx-auto w-full">
+            <div className="mb-12 space-y-2">
               <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-[#1b1b23] dark:text-white">Digital Operations</h2>
-              <div className="w-24 h-2 bg-[#4441c4] rounded-full"></div>
+              <div className="w-16 h-1.5 bg-[#4b49cb] rounded-full"></div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-8 min-h-[800px]">
+            <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 h-[600px]">
               <motion.div 
                 whileHover={{ scale: 0.98 }}
                 className="md:col-span-2 md:row-span-1 bg-white dark:bg-slate-800 rounded-[3rem] p-16 flex flex-col justify-between relative overflow-hidden group shadow-xl"

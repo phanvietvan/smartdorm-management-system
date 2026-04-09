@@ -4,7 +4,10 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://lenard-subentire-ackno
 
 export const api = axios.create({
   baseURL: API_BASE,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
+  },
 })
 
 api.interceptors.request.use((config) => {

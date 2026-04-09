@@ -15,7 +15,7 @@ async function testAI() {
     const genAI = new GoogleGenerativeAI(apiKey);
     
     console.log("Listing models...");
-        const modelName = "gemini-pro";
+        const modelName = "gemini-2.0-flash";
         console.log(`Trying ${modelName}...`);
         try {
             const model = genAI.getGenerativeModel({ model: modelName });
