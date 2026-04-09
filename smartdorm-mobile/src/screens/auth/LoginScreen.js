@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, ArrowRight } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight, User } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authApi } from '../../api/auth';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -15,10 +17,22 @@ export default function LoginScreen({ navigation }) {
     }
     setLoading(true);
     try {
-      Alert.alert("Thành công", "Chào mừng bạn quay lại SmartDorm!");
-      navigation.navigate('Main');
+      const response = await authApi.login({ email, password });
+      
+      // Lưu token vào bộ nhớ máy
+      if (response.data && response.data.token) {
+        await AsyncStorage.setItem('token', response.data.token);
+        // Có thể lưu thêm thông tin user nếu cần
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        Alert.alert("Thành công", `Chào mừng ${response.data.user?.name || ''} quay lại!`);
+        navigation.navigate('Main');
+      } else {
+        throw new Error("Không nhận được token từ hệ thống");
+      }
     } catch (error) {
-      Alert.alert("Lỗi", "Thông tin đăng nhập không chính xác");
+      const errorMsg = error.response?.data?.message || "Thông tin đăng nhập không chính xác hoặc lỗi hệ thống";
+      Alert.alert("Lỗi đăng nhập", errorMsg);
     } finally {
       setLoading(false);
     }
