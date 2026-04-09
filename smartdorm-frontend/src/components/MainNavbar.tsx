@@ -32,9 +32,7 @@ export default function MainNavbar() {
     return () => window.removeEventListener('scroll', controlNavbar)
   }, [lastScrollY])
 
-  const isHome = path === '/'
   const isRooms = path === '/rooms-available'
-  const isApps = path === '/apps'
 
   return (
     <motion.nav 
