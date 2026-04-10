@@ -137,8 +137,8 @@ export default function LandingPage() {
           </div>
         </header>
 
-        {/* Operation Core: The Digital Pulse - Vibrant & Energetic Version */}
-        <section id="operation-core" className="h-screen bg-slate-950 relative overflow-hidden flex flex-col justify-center py-10">
+        {/* Operation Core: The Digital Pulse - Reinforced Stability */}
+        <section id="operation-core" className="min-h-screen bg-slate-950 relative overflow-hidden flex flex-col justify-center py-16 lg:py-24">
           {/* Immersive & Vibrant Atmospheric Background */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             {/* Dynamic Color Orbs */}
@@ -185,13 +185,13 @@ export default function LandingPage() {
                 className="relative w-full max-w-6xl flex flex-col md:flex-row items-center justify-center gap-8 md:gap-24 -my-4"
               >
                 {/* Security Animation with Vibrant Aura - Slightly smaller */}
-                <div className="relative w-full max-w-[20rem] flex items-center justify-center group">
+                <div className="relative w-full max-w-[20rem] flex items-center justify-center group flex-shrink-0">
                   <div className="absolute inset-0 bg-indigo-500/20 blur-[100px] rounded-full opacity-40 group-hover:opacity-100 transition-all duration-1000 scale-110"></div>
                   <Lottie animationData={securityAnimation} loop={true} className="w-full h-auto relative z-10 scale-100 drop-shadow-[0_0_20px_rgba(99,102,241,0.3)]" />
                 </div>
 
                 {/* CCTV Animation with Vibrant Aura - Slightly smaller */}
-                <div className="relative w-full max-w-[20rem] flex items-center justify-center group">
+                <div className="relative w-full max-w-[20rem] flex items-center justify-center group flex-shrink-0">
                   <div className="absolute inset-0 bg-cyan-500/20 blur-[100px] rounded-full opacity-40 group-hover:opacity-100 transition-all duration-1000 scale-110"></div>
                   <Lottie animationData={cctvAnimation} loop={true} className="w-full h-auto relative z-10 scale-100 drop-shadow-[0_0_20px_rgba(34,211,238,0.3)]" />
                 </div>
@@ -259,8 +259,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* The Portal Command: Management Redefined - Obsidian Premium Version */}
-        <section id="portal-command" className="h-screen bg-slate-950 relative overflow-hidden flex flex-col justify-center py-10">
+        {/* The Portal Command: Management Redefined - Reinforced Stability */}
+        <section id="portal-command" className="min-h-screen bg-slate-950 relative overflow-hidden flex flex-col justify-center py-12 lg:py-24">
           {/* Subtle Dynamic Background */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90rem] h-[90rem] bg-indigo-600/5 rounded-full blur-[200px] animate-pulse"></div>
@@ -268,29 +268,28 @@ export default function LandingPage() {
           </div>
 
           <div className="relative z-10 max-w-[1700px] mx-auto px-6 w-full flex flex-col items-center">
-            {/* Header Content */}
-            <div className="text-center mb-12 relative z-20">
+            {/* Header Content - Optimized Typography */}
+            <div className="text-center mb-10 relative z-20 max-w-5xl mx-auto">
               <motion.div 
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 backdrop-blur-xl mb-4"
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 backdrop-blur-xl mb-6"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></div>
                 <span className="text-[10px] font-black text-blue-300 uppercase tracking-[0.4em]">Real-time System Status</span>
               </motion.div>
               
-              <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-6 leading-none">
+              <h2 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white mb-6 leading-[0.9] break-words">
                 The Portal <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-600 italic">Command.</span>
               </h2>
-              <p className="text-xl text-slate-400 max-w-2xl mx-auto font-medium italic opacity-80">
+              <p className="text-base md:text-xl text-slate-400 max-w-2xl mx-auto font-medium italic opacity-80 leading-relaxed">
                 Điều phối toàn bộ hệ thống quản lý ký túc xá thông minh với <span className="text-white font-bold underline decoration-blue-500/30 underline-offset-8">quy trình tự động hóa 24/7.</span>
               </p>
             </div>
 
-            {/* Central Dashboard Interface - Balanced Layout */}
             <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 w-full max-w-7xl -mt-4">
-              {/* Monitoring Stats - Left Side (More Compact) */}
-              <div className="flex flex-col gap-4 w-full lg:w-72 order-2 lg:order-1">
+              {/* Monitoring Stats - Left Side (Locked Dimensions) */}
+              <div className="flex flex-col gap-4 w-full lg:w-72 order-2 lg:order-1 flex-shrink-0">
                 {[
                   { label: "Phòng trống", value: "24", unit: "Đơn vị", color: "blue" },
                   { label: "Yêu cầu mới", value: "08", unit: "Pending", color: "amber" },
@@ -349,8 +348,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Master Your Workflow (Enhanced Asymmetric Bento) */}
-        <section id="digital-operations" className="py-24 bg-[#fcf8ff] dark:bg-slate-950 px-6 lg:px-12 overflow-hidden">
+        {/* Master Your Workflow - Reinforced Stability */}
+        <section id="digital-operations" className="min-h-screen py-16 lg:py-24 bg-[#fcf8ff] dark:bg-slate-950 px-6 lg:px-12 overflow-hidden flex flex-col justify-center">
           <div className="max-w-[1700px] mx-auto">
             <div className="bg-[#0f0f1c] rounded-[4rem] p-8 lg:p-24 flex flex-col lg:flex-row items-center gap-20 overflow-hidden relative shadow-[0_80px_150px_-30px_rgba(0,0,0,0.6)] border border-white/5">
               
@@ -435,7 +434,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="lg:w-1/2 relative flex justify-center py-20">
+              <div className="lg:w-1/2 relative flex justify-center py-20 flex-shrink-0">
                 <div className="relative">
                   <motion.div 
                     initial={{ scale: 0.8, opacity: 0, y: 20 }}
