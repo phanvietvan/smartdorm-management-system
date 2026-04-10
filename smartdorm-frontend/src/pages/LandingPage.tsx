@@ -56,10 +56,10 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-6xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)] leading-tight py-2"
+                className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)] leading-[1.1] sm:leading-tight py-2"
               >
                 Cách mạng Quản lý<br/>
-                <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#6e6bff] to-[#e056b3] px-2 py-4 -my-4">SmartDorm.</span>
+                <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#6e6bff] to-[#e056b3] px-2 py-4 -my-4 sm:my-0">SmartDorm.</span>
               </motion.h1>
               
               <motion.p 
@@ -88,7 +88,7 @@ export default function LandingPage() {
           </div>
 
           {/* Upsized Slender Pill Stats Card */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-4xl px-6 z-20">
+          <div className="absolute bottom-10 lg:bottom-16 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 sm:px-6 z-20 hidden sm:block">
             <motion.div 
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
@@ -134,6 +134,30 @@ export default function LandingPage() {
                 </div>
               </div>
             </motion.div>
+          </div>
+
+          {/* Mobile Stats Card - Different Layout for Small Screens */}
+          <div className="sm:hidden absolute bottom-6 left-0 w-full px-6 z-20">
+             <motion.div 
+               initial={{ opacity: 0, y: 50 }}
+               animate={{ opacity: 1, y: 0 }}
+               className="bg-white/10 backdrop-blur-3xl rounded-3xl p-4 border border-white/20 grid grid-cols-2 gap-4"
+             >
+                <div className="flex items-center gap-2">
+                   <Zap size={14} className="text-primary" />
+                   <div>
+                      <p className="text-[8px] font-black uppercase text-white/60">Hiệu suất</p>
+                      <p className="text-lg font-black text-white">+45%</p>
+                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                   <Users size={14} className="text-secondary" />
+                   <div>
+                      <p className="text-[8px] font-black uppercase text-white/60">Cư dân</p>
+                      <p className="text-lg font-black text-white">2k+</p>
+                   </div>
+                </div>
+             </motion.div>
           </div>
         </header>
 
