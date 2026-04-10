@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Phone } from 'lucide-react'
+import { Phone, Facebook, Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useSplash } from '../context/SplashContext'
 
 export default function MainNavbar() {
   const { user } = useAuth()
+  const { showSplash } = useSplash()
   const location = useLocation()
   const path = location.pathname
   const [isVisible, setIsVisible] = useState(true)
@@ -39,19 +41,23 @@ export default function MainNavbar() {
       initial={{ y: 0 }}
       animate={{ y: isVisible ? 0 : -110 }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      className="fixed top-0 w-full z-[100] bg-white/60 dark:bg-slate-950/60 backdrop-blur-2xl shadow-[0_8px_60px_rgba(0,0,0,0.02)] border-b border-white/20 dark:border-slate-800/20 px-12 pointer-events-auto"
+      className="fixed top-0 w-full z-[100] bg-white/60 dark:bg-slate-950/60 backdrop-blur-2xl shadow-[0_8px_60px_rgba(0,0,0,0.02)] border-b border-white/20 dark:border-slate-800/20 px-6 lg:px-10 pointer-events-auto"
     >
-      <div className="flex justify-between items-center h-20 max-w-7xl mx-auto relative">
+      <div className="flex justify-between items-center h-20 max-w-[1440px] mx-auto relative">
         {/* Left: Logo - Limited width to prevent overlap */}
-        <div className="w-fit flex items-center pr-10">
-          <Link to="/" className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white hover:text-[#4b49cb] transition-colors relative z-20">
+        <div className="shrink-0 flex items-center pr-6 lg:pr-10">
+          <Link 
+            to="/" 
+            onClick={() => showSplash(1200)}
+            className="text-3xl lg:text-4xl font-black tracking-tighter text-slate-900 dark:text-white hover:text-[#4b49cb] transition-colors relative z-20"
+          >
             SmartDorm
           </Link>
         </div>
         
         {/* Center: Menu - Flex-1 with justify-center to keep it centered */}
-        <div className="flex-1 hidden md:flex justify-center">
-          <div className="flex gap-10 lg:gap-14 font-['Plus_Jakarta_Sans']">
+        <div className="flex-1 hidden md:flex justify-center px-4 overflow-hidden">
+          <div className="flex gap-6 lg:gap-14 font-['Plus_Jakarta_Sans']">
             {[
               { label: 'Giới thiệu', id: 'top' },
               { label: 'Vận hành', id: 'operation-core' },
@@ -67,14 +73,14 @@ export default function MainNavbar() {
                     window.location.href = `/#${item.id}`;
                   }
                 }}
-                className="transition-all font-bold tracking-tight text-xs lg:text-sm px-2 text-on-surface-variant hover:text-primary relative group uppercase tracking-widest"
+                className="transition-all font-bold tracking-tight text-xs lg:text-sm px-2 text-on-surface-variant hover:text-primary relative group uppercase tracking-widest whitespace-nowrap"
               >
                 {item.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
               </button>
             ))}
             <Link 
-              className={`transition-colors font-bold tracking-tight text-xs lg:text-sm px-2 uppercase tracking-widest ${isRooms ? 'text-primary' : 'text-on-surface-variant hover:text-primary'}`} 
+              className={`transition-colors font-bold tracking-tight text-xs lg:text-sm px-2 uppercase tracking-widest whitespace-nowrap ${isRooms ? 'text-primary' : 'text-on-surface-variant hover:text-primary'}`} 
               to="/rooms-available"
             >
               Tìm phòng
@@ -83,17 +89,23 @@ export default function MainNavbar() {
         </div>
 
         {/* Right: Actions */}
-        <div className="w-fit flex justify-end items-center gap-6 lg:gap-8 min-w-[300px]">
-          <div className="hidden lg:flex items-center gap-4 pr-6 border-r border-[#abadb0]/20">
+        <div className="shrink-0 flex justify-end items-center gap-4 lg:gap-8">
+          <div className="hidden lg:flex items-center gap-6 pr-8 border-r border-[#abadb0]/20">
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="p-2 rounded-xl hover:bg-[#4b49cb]/5 text-[#595c5e] dark:text-slate-400 hover:text-[#4b49cb] transition-all" title="Facebook">
+              <Facebook size={18} strokeWidth={2.5} />
+            </a>
+            <a href="mailto:contact@smartdorm.com" className="p-2 rounded-xl hover:bg-[#4b49cb]/5 text-[#595c5e] dark:text-slate-400 hover:text-[#4b49cb] transition-all" title="Email">
+              <Mail size={18} strokeWidth={2.5} />
+            </a>
             <a href="tel:0123456789" className="p-2 rounded-xl hover:bg-[#4b49cb]/5 text-[#595c5e] dark:text-slate-400 hover:text-[#4b49cb] transition-all" title="Call us">
               <Phone size={18} strokeWidth={2.5} />
             </a>
           </div>
           {user ? (
              <div className="flex items-center gap-4 relative z-50">
-                <div className="hidden xl:flex flex-col items-end">
+                <div className="hidden xl:flex flex-col items-end pr-2">
                   <span className="text-[9px] font-black text-[#abadb0] uppercase tracking-widest leading-none mb-1">AUTHENTICATED</span>
-                  <span className="text-[11px] font-black leading-none uppercase tracking-tight text-[#2c2f31] dark:text-white truncate max-w-[100px]">{user.fullName}</span>
+                  <span className="text-[11px] font-black leading-none uppercase tracking-tight text-[#2c2f31] dark:text-white truncate max-w-[120px]">{user.fullName}</span>
                 </div>
                 <Link 
                   to="/app/dashboard" 

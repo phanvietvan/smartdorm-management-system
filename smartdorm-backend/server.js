@@ -17,13 +17,16 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:8081",
   "https://smartdorm-management-system-sooty.vercel.app",
-  "https://lenard-subentire-acknowledgingly.ngrok-free.app"
+  "https://lenard-subentire-acknowledgingly.ngrok-free.app",
+  "https://lenard-subentire-acknowledgingly.ngrok-free.dev"
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Cho phép các origin trong whitelist hoặc không có origin (như Postman/Mobile App thật)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.log("CORS Blocked for origin:", origin);

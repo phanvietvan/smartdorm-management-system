@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://lenard-subentire-acknowledgingly.ngrok-free.dev'
+const API_BASE = import.meta.env.VITE_API_URL || '/'
 
 export const api = axios.create({
   baseURL: API_BASE,

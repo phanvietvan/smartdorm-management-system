@@ -11,12 +11,16 @@ import './style.css'
 const googleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string) || ''
 const hasValidGoogleId = !!googleClientId && googleClientId.includes('.apps.googleusercontent.com')
 
+import { SplashProvider } from './context/SplashContext'
+
 const AppWithProviders = () => (
   <BrowserRouter>
     <ScrollToTop />
     <ThemeProvider>
       <AuthProvider>
-        <App />
+        <SplashProvider>
+          <App />
+        </SplashProvider>
       </AuthProvider>
     </ThemeProvider>
   </BrowserRouter>

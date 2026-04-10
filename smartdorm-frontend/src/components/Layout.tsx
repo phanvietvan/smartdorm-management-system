@@ -26,9 +26,11 @@ import { useSocket } from '../hooks/useSocket'
 import { usePushNotification } from '../hooks/usePushNotification'
 import ThemeToggle from './ThemeToggle'
 import AIChatBot from './AIChatBot'
+import { useSplash } from '../context/SplashContext'
 
 export default function Layout() {
   const { user, logout } = useAuth()
+  const { showSplash } = useSplash()
   const navigate = useNavigate()
   const { socket } = useSocket()
   usePushNotification() // Register push notifications
@@ -133,8 +135,14 @@ export default function Layout() {
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] font-display antialiased">
       {/* SideNavBar - Premium Editorial Style */}
       <aside className="h-screen w-72 fixed left-0 top-0 overflow-hidden bg-white dark:bg-slate-900 flex flex-col py-8 px-5 z-50 border-r border-slate-50 dark:border-slate-800 shadow-[20px_0_40px_rgba(74,63,226,0.02)] transition-all">
-        <div className="mb-12 px-3 flex items-center gap-4">
-          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 rotate-3 hover:rotate-0 transition-transform">
+        <div 
+          className="mb-12 px-3 flex items-center gap-4 cursor-pointer group"
+          onClick={() => {
+            showSplash(1200)
+            navigate('/')
+          }}
+        >
+          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 rotate-3 group-hover:rotate-0 transition-transform">
             <Building2 className="text-white w-6 h-6" />
           </div>
           <div>

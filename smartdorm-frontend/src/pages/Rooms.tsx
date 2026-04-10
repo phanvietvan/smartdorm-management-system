@@ -212,12 +212,19 @@ export default function Rooms() {
     }
   }
 
-  const filteredRooms = rooms.filter(r => {
+  if (loading) return (
+    <div className="flex items-center justify-center p-12 text-slate-500 font-medium">Đang tải dữ liệu...</div>
+  )
+  if (error) return <div className="p-4 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 font-medium">{error}</div>
+
+  const roomsArray = Array.isArray(rooms) ? rooms : []
+  const filteredRooms = roomsArray.filter(r => {
+    if (!r) return false
     if (!searchTerm) return true
     const query = searchTerm.toLowerCase()
     
-    const nameMatch = r.name.toLowerCase().includes(query)
-    const floorMatch = r.floor.toString().includes(query)
+    const nameMatch = r.name?.toLowerCase().includes(query)
+    const floorMatch = r.floor?.toString().includes(query)
     const statusMatch = (r.status === 'available' ? 'có sẵn trống' : 'đã thuê occupied').includes(query)
     
     // Check area name
@@ -231,11 +238,6 @@ export default function Rooms() {
 
     return nameMatch || floorMatch || statusMatch || areaMatch
   })
-
-  if (loading) return (
-    <div className="flex items-center justify-center p-12 text-slate-500 font-medium">Đang tải dữ liệu...</div>
-  )
-  if (error) return <div className="p-4 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 font-medium">{error}</div>
 
   if (showSuccess) {
     return (
