@@ -33,6 +33,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 import RoomsAvailable from './pages/RoomsAvailable'
 import AppVersions from './pages/AppVersions'
+import FaceRegister from './pages/FaceRegister'
 
 export default function App() {
   return (
@@ -66,6 +67,7 @@ export default function App() {
         <Route path="payments/callback" element={<VnpayCallback />} />
         <Route path="rental-requests" element={<RentalRequestManage />} />
         <Route path="pending" element={<PendingApproval />} />
+        <Route path="face-register" element={<FaceRegister />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

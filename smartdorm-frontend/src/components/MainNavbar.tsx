@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Phone, Facebook, Mail, Menu, X, Info, Settings, LayoutDashboard, Search, ArrowRight, User, Globe } from 'lucide-react'
+import { Phone, Facebook, Mail, Menu, X, Info, Settings, LayoutDashboard, Search, ArrowRight, Globe } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSplash } from '../context/SplashContext'
 
@@ -9,7 +9,6 @@ export default function MainNavbar() {
   const { user } = useAuth()
   const { showSplash } = useSplash()
   const location = useLocation()
-  const navigate = useNavigate()
   const path = location.pathname
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)

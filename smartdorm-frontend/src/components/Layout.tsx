@@ -17,7 +17,8 @@ import {
   Receipt,
   Briefcase,
   UserCheck,
-  Globe
+  Globe,
+  ScanFace
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { notificationsApi } from '../api/notifications'
@@ -121,6 +122,7 @@ export default function Layout() {
     { to: '/app/visitors', icon: UserCheck, label: 'Sổ đăng ký khách' },
     { to: '/app/maintenance', icon: Wrench, label: 'Bảo trì' },
     { to: '/app/rental-requests', icon: ClipboardList, label: 'Yêu cầu thuê' },
+    { to: '/app/face-register', icon: ScanFace, label: 'AI Security' },
     { to: '/app/settings', icon: Settings, label: 'Cài đặt' },
   ] : [
     { to: '/', icon: Globe, label: 'Website' },

@@ -1,0 +1,9 @@
+{
+  "name": "smartdorm-door-app",
+  "version": "1.0.0",
+  "description": "SmartDorm Door Access Control - Face Recognition",
+  "private": true,
+  "scripts": {
+    "start": "npx serve . -l 3001 --no-clipboard"
+  }
+}

@@ -16,6 +16,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "http://localhost:8081",
+  "http://localhost:3001",
   "https://smartdorm-management-system-sooty.vercel.app",
   "https://lenard-subentire-acknowledgingly.ngrok-free.app",
   "https://lenard-subentire-acknowledgingly.ngrok-free.dev"
@@ -39,7 +40,7 @@ app.use(cors({
 }));
 
 // 2. Middleware cơ bản
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Register models
@@ -54,6 +55,8 @@ require("./models/Notification");
 require("./models/Message");
 require("./models/Visitor");
 require("./models/RentalRequest");
+require("./models/FaceData");
+require("./models/CheckinLog");
 
 const authRoutes = require("./routes/auth");
 const roomRoutes = require("./routes/rooms");
@@ -70,6 +73,7 @@ const notificationRoutes = require("./routes/notifications");
 const uploadRoutes = require("./routes/upload");
 const rentalRequestRoutes = require("./routes/rentalRequests");
 const aiRoutes = require("./routes/aiRoutes");
+const faceRoutes = require("./routes/faceRoutes");
 
 // Initialize Socket.io
 socketUtil.init(server);
@@ -103,6 +107,7 @@ app.use("/notifications", notificationRoutes);
 app.use("/upload", uploadRoutes);
 app.use("/rental-requests", rentalRequestRoutes);
 app.use("/ai", aiRoutes);
+app.use("/face", faceRoutes);
 
 // --- Push Route ---
 app.post("/push/subscribe", require("./middleware/auth").authenticate, async (req, res) => {
