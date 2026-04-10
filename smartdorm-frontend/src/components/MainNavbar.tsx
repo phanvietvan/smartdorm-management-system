@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Phone, Facebook, Mail, Menu, X } from 'lucide-react'
+import { Phone, Facebook, Mail, Menu, X, Info, Settings, LayoutDashboard, Search, ArrowRight, User, Globe } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSplash } from '../context/SplashContext'
 
@@ -9,6 +9,7 @@ export default function MainNavbar() {
   const { user } = useAuth()
   const { showSplash } = useSplash()
   const location = useLocation()
+  const navigate = useNavigate()
   const path = location.pathname
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
@@ -39,10 +40,10 @@ export default function MainNavbar() {
   const isRooms = path === '/rooms-available'
 
   const navLinks = [
-    { label: 'Giới thiệu', id: 'top' },
-    { label: 'Vận hành', id: 'operation-core' },
-    { label: 'Hệ thống', id: 'portal-command' },
-    { label: 'Ứng dụng', id: 'digital-operations' }
+    { label: 'Giới thiệu', id: 'top', icon: Info },
+    { label: 'Vận hành', id: 'operation-core', icon: Settings },
+    { label: 'Hệ thống', id: 'portal-command', icon: LayoutDashboard },
+    { label: 'Ứng dụng', id: 'digital-operations', icon: Search }
   ]
 
   const handleScrollTo = (id: string) => {
@@ -157,50 +158,114 @@ export default function MainNavbar() {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
+        {/* Mobile Menu Overlay */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 overflow-hidden"
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-0 h-screen w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl z-[150] md:hidden flex flex-col"
             >
-              <div className="flex flex-col p-6 gap-6">
-                {navLinks.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleScrollTo(item.id)}
-                    className="text-left font-black text-lg tracking-tight text-slate-700 dark:text-slate-300 hover:text-primary transition-colors uppercase"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-                <Link 
-                  to="/rooms-available"
+              {/* Header inside Menu */}
+              <div className="flex justify-between items-center h-20 px-6 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">SmartDorm<span className="text-primary">.</span></span>
+                <button 
                   onClick={() => setIsMenuOpen(false)}
-                  className="text-left font-black text-lg tracking-tight text-primary uppercase"
+                  className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
                 >
-                  Tìm phòng
-                </Link>
-                {!user && (
-                  <div className="flex flex-col gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <Link 
-                      to="/login"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="text-center py-4 font-black uppercase tracking-widest text-slate-600 dark:text-slate-400"
-                    >
-                      Đăng nhập
-                    </Link>
-                    <Link 
-                      to="/register"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="text-center py-4 px-6 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20"
-                    >
-                      Tham gia ngay
-                    </Link>
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Links Section */}
+              <div className="flex-1 overflow-y-auto py-6 px-6 space-y-1">
+                <p className="text-[9px] font-black text-[#abadb0] uppercase tracking-[0.3em] mb-4">Chính - Navigation</p>
+                {navLinks.map((item, index) => (
+                  <motion.button
+                    key={item.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.08 }}
+                    onClick={() => handleScrollTo(item.id)}
+                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 group transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                       <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-400 group-hover:text-primary transition-colors">
+                          <item.icon size={18} />
+                       </div>
+                       <span className="font-black text-lg tracking-tight text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors uppercase">{item.label}</span>
+                    </div>
+                    <ArrowRight size={16} className="text-slate-300 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                  </motion.button>
+                ))}
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="pt-2"
+                >
+                  <Link 
+                    to="/rooms-available"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-primary/5 text-primary"
+                  >
+                    <div className="p-2.5 rounded-lg bg-primary text-white">
+                       <Globe size={18} />
+                    </div>
+                    <span className="font-black text-lg tracking-tight uppercase">Tìm phòng</span>
+                  </Link>
+                </motion.div>
+              </div>
+
+              {/* Bottom Section: Auth & Social */}
+              <div className="p-6 bg-slate-50 dark:bg-slate-900/50 space-y-6">
+                {user ? (
+                   <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.fullName}&background=4f46e5&color=fff`} className="w-10 h-10 rounded-[0.8rem] object-cover" />
+                        <div>
+                          <p className="font-black text-[13px] text-slate-900 dark:text-white leading-none">{user.fullName}</p>
+                          <p className="text-[9px] uppercase font-bold text-primary mt-1">{user.role}</p>
+                        </div>
+                      </div>
+                      <Link 
+                        to="/app/dashboard"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="p-2.5 bg-primary text-white rounded-lg shadow-lg shadow-primary/20"
+                      >
+                        <LayoutDashboard size={18} />
+                      </Link>
+                   </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                     <Link 
+                        to="/login"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center justify-center p-3.5 border-2 border-slate-200 dark:border-slate-800 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-600 dark:text-slate-400"
+                      >
+                        Login
+                      </Link>
+                      <Link 
+                        to="/register"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center justify-center p-3.5 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20"
+                      >
+                        Join
+                      </Link>
                   </div>
                 )}
+
+                <div className="flex justify-between items-center px-1">
+                   <div className="flex gap-3">
+                      <a href="#" className="w-9 h-9 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-primary transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"><Facebook size={16} /></a>
+                      <a href="#" className="w-9 h-9 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-primary transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"><Mail size={16} /></a>
+                      <a href="#" className="w-9 h-9 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-primary transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"><Phone size={16} /></a>
+                   </div>
+                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">SmartDorm v2.0</p>
+                </div>
               </div>
             </motion.div>
           )}

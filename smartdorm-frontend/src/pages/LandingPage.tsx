@@ -136,25 +136,30 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          {/* Mobile Stats Card - Different Layout for Small Screens */}
-          <div className="sm:hidden absolute bottom-6 left-0 w-full px-6 z-20">
+          {/* Mobile Stats Card - Slender Pill Design */}
+          <div className="sm:hidden absolute bottom-10 left-0 w-full px-6 z-20">
              <motion.div 
-               initial={{ opacity: 0, y: 50 }}
-               animate={{ opacity: 1, y: 0 }}
-               className="bg-white/10 backdrop-blur-3xl rounded-3xl p-4 border border-white/20 grid grid-cols-2 gap-4"
+               initial={{ opacity: 0, scale: 0.9, y: 20 }}
+               animate={{ opacity: 1, scale: 1, y: 0 }}
+               transition={{ delay: 0.5, type: 'spring', damping: 20 }}
+               className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl rounded-full py-4 px-8 border border-white/40 dark:border-slate-800/50 shadow-[0_20px_40px_rgba(0,0,0,0.1)] flex justify-around items-center divide-x divide-slate-500/10"
              >
-                <div className="flex items-center gap-2">
-                   <Zap size={14} className="text-primary" />
-                   <div>
-                      <p className="text-[8px] font-black uppercase text-white/60">Hiệu suất</p>
-                      <p className="text-lg font-black text-white">+45%</p>
+                <div className="flex items-center gap-3 pr-4">
+                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <Zap size={14} strokeWidth={3} />
+                   </div>
+                   <div className="text-left">
+                      <p className="text-[7px] font-black uppercase text-primary tracking-widest leading-none mb-1">Hiệu suất</p>
+                      <p className="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">+45%</p>
                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                   <Users size={14} className="text-secondary" />
-                   <div>
-                      <p className="text-[8px] font-black uppercase text-white/60">Cư dân</p>
-                      <p className="text-lg font-black text-white">2k+</p>
+                <div className="flex items-center gap-3 pl-4">
+                   <div className="w-8 h-8 rounded-lg bg-[#e056b3]/10 flex items-center justify-center text-[#e056b3]">
+                      <Users size={14} strokeWidth={3} />
+                   </div>
+                   <div className="text-left">
+                      <p className="text-[7px] font-black uppercase text-[#e056b3] tracking-widest leading-none mb-1">Cư dân</p>
+                      <p className="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tighter">2k+</p>
                    </div>
                 </div>
              </motion.div>
