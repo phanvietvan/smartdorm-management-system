@@ -20,6 +20,12 @@ const faceDataSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    // Email cư dân
+    email: { type: String, trim: true },
+    // Thông tin bổ sung
+    room: { type: String, trim: true },
+    block: { type: String, trim: true },
+    phoneNumber: { type: String, trim: true },
     // Mảng 128 số thực - face descriptor từ face-api.js
     faceDescriptor: {
       type: [Number],

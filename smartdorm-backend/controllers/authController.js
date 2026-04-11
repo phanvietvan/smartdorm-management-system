@@ -13,11 +13,13 @@ const formatUser = (user) => {
     _id: user._id || user.id,
     email: user.email,
     fullName: user.fullName,
+    studentId: user.studentId || user.username || (user._id ? user._id.toString().slice(-6).toUpperCase() : ''),
     role: user.role,
     status: user.status || "approved",
-    roomId: user.roomId,
+    roomId: user.roomId, // Object or ID
+    room: user.roomId,   // Alias for easier access
     managedAreaId: user.managedAreaId,
-    phone: user.phone,
+    phone: user.phone || user.phoneNumber,
     avatarUrl: user.avatarUrl,
     idCardNumber: user.idCardNumber,
     address: user.address,
@@ -167,8 +169,16 @@ exports.googleLogin = async (req, res) => {
   }
 };
 
-exports.me = (req, res) => {
-  res.json(formatUser(req.user));
+exports.me = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate("roomId")
+      .populate("managedAreaId");
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    res.json({ success: true, user: formatUser(user) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 exports.changePassword = async (req, res) => {

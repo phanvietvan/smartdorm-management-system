@@ -115,7 +115,15 @@ export default function ProfileSettings() {
   
   const t = translations[langCode]
 
-  const [profileForm, setProfileForm] = useState({ fullName: '', phone: '', idCardNumber: '', address: '', avatarUrl: '' })
+  const [profileForm, setProfileForm] = useState({ 
+    fullName: '', 
+    phone: '', 
+    idCardNumber: '', 
+    address: '', 
+    avatarUrl: '',
+    studentId: '',
+    email: '' 
+  })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileMessage, setProfileMessage] = useState({ type: '', text: '' })
@@ -126,15 +134,25 @@ export default function ProfileSettings() {
 
   const [notifSetting, setNotifSetting] = useState({ push: true, email: false })
 
+  const [userRoomInfo, setUserRoomInfo] = useState({ room: '', block: '' })
+
   useEffect(() => {
     if (user) {
       authApi.me().then(res => {
+        const u = res.data.user || res.data
         setProfileForm({
-          fullName: res.data.fullName || '',
-          phone: (res.data as any).phone || '',
-          idCardNumber: (res.data as any).idCardNumber || '',
-          address: (res.data as any).address || '',
-          avatarUrl: (res.data as any).avatarUrl || ''
+          fullName: u.fullName || u.name || '',
+          phone: u.phone || u.phoneNumber || '',
+          idCardNumber: u.idCardNumber || '',
+          address: u.address || '',
+          avatarUrl: u.avatarUrl || '',
+          studentId: u.studentId || u.username || '',
+          email: u.email || ''
+        })
+        const r = u.room || u.roomId
+        setUserRoomInfo({
+          room: r?.roomNumber || r?.name || 'P238',
+          block: r?.block || r?.building || 'Cơ sở 1'
         })
       }).catch(() => {})
     }
@@ -242,16 +260,31 @@ export default function ProfileSettings() {
                         <div className="space-y-8">
                             <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">{t.profile.fullName}</label>
                             <input className="w-full bg-[#dadde1] border-none rounded-full px-8 py-4.5 text-[#2c2f31] font-bold focus:ring-2 focus:ring-[#4b49cb]/20 transition-all" type="text" value={profileForm.fullName} onChange={e => setProfileForm(p => ({ ...p, fullName: e.target.value }))} /></div>
+                            
+                            <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">Mã cư dân / ID</label>
+                            <input className="w-full bg-[#dadde1]/60 border-none rounded-full px-8 py-4.5 text-[#2c2f31]/60 font-bold cursor-not-allowed" type="text" value={profileForm.studentId} disabled /></div>
+
                             <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">{t.profile.email}</label>
-                            <input className="w-full bg-[#dadde1]/60 border-none rounded-full px-8 py-4.5 text-[#2c2f31]/60 font-bold pl-14 cursor-not-allowed" type="email" value={user?.email || ''} disabled /></div>
+                            <input className="w-full bg-[#dadde1]/60 border-none rounded-full px-8 py-4.5 text-[#2c2f31]/60 font-bold pl-14 cursor-not-allowed" type="email" value={profileForm.email} disabled /></div>
                         </div>
                         <div className="space-y-8">
                             <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">{t.profile.phone}</label>
                             <input className="w-full bg-[#dadde1] border-none rounded-full px-8 py-4.5 text-[#2c2f31] font-bold pl-14" type="tel" value={profileForm.phone} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))} /></div>
-                            <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">{t.profile.location}</label>
-                            <input className="w-full bg-[#dadde1] border-none rounded-full px-8 py-4.5 text-[#2c2f31] font-bold pl-14" type="text" value={profileForm.address} onChange={e => setProfileForm(p => ({ ...p, address: e.target.value }))} /></div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">Phòng</label>
+                              <input className="w-full bg-[#dadde1]/60 border-none rounded-full px-8 py-4.5 text-[#2c2f31]/60 font-bold cursor-not-allowed" type="text" value={userRoomInfo.room} disabled /></div>
+                              <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">Tòa nhà</label>
+                              <input className="w-full bg-[#dadde1]/60 border-none rounded-full px-8 py-4.5 text-[#2c2f31]/60 font-bold cursor-not-allowed" type="text" value={userRoomInfo.block} disabled /></div>
+                            </div>
+
+                            <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">Số CMND/CCCD</label>
+                            <input className="w-full bg-[#dadde1] border-none rounded-full px-8 py-4.5 text-[#2c2f31] font-bold" type="text" value={profileForm.idCardNumber} onChange={e => setProfileForm(p => ({ ...p, idCardNumber: e.target.value }))} /></div>
                         </div>
                     </div>
+                    <div><label className="text-[11px] font-black uppercase tracking-widest text-[#75777a] mb-3 block">{t.profile.location}</label>
+                    <input className="w-full bg-[#dadde1] border-none rounded-full px-8 py-4.5 text-[#2c2f31] font-bold" type="text" value={profileForm.address} onChange={e => setProfileForm(p => ({ ...p, address: e.target.value }))} /></div>
+
                     <button type="submit" disabled={profileLoading} className="bg-gradient-to-br from-[#4b49cb] to-[#9596ff] text-white px-10 py-5 rounded-2xl font-black text-sm tracking-widest shadow-lg hover:scale-[1.02] transition-all flex items-center gap-4">
                       <span>{profileLoading ? '...' : t.profile.save.toUpperCase()}</span>
                       <span className="material-symbols-outlined text-sm">check_circle</span>

@@ -10,7 +10,7 @@ const CheckinLog = require("../models/CheckinLog");
  */
 router.post("/register", async (req, res) => {
   try {
-    const { name, studentId, faceDescriptor } = req.body;
+    const { name, studentId, email, room, block, phoneNumber, faceDescriptor, role } = req.body;
 
     // Validate input
     if (!name || !studentId || !faceDescriptor) {
@@ -28,17 +28,19 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // Kiểm tra studentId đã tồn tại chưa
-    const existing = await FaceData.findOne({ studentId });
-    if (existing) {
-      return res.status(409).json({
-        success: false,
-        message: `Mã cư dân ${studentId} đã được đăng ký khuôn mặt`,
-      });
+    // Kiểm tra studentId đã tồn tại chưa (Nếu không phải admin thì mới chặn trùng)
+    if (role !== "admin") {
+      const existing = await FaceData.findOne({ studentId });
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          message: `Mã cư dân ${studentId} đã được đăng ký khuôn mặt.`,
+        });
+      }
     }
 
     // Lưu dữ liệu khuôn mặt mới
-    const faceData = new FaceData({ name, studentId, faceDescriptor });
+    const faceData = new FaceData({ name, studentId, email, room, block, phoneNumber, faceDescriptor });
     await faceData.save();
 
     console.log(`✅ Face registered: ${name} (${studentId})`);
@@ -118,13 +120,19 @@ router.post("/recognize", async (req, res) => {
         deviceId: deviceId || "door-main",
       });
 
-      return res.json({
-        success: true,
+      return res.json({ 
+        success: true, 
         student: {
           name: bestMatch.name,
           studentId: bestMatch.studentId,
+          email: bestMatch.email || "N/A",
+          room: bestMatch.room || "N/A",
+          block: bestMatch.block || "N/A",
+          phoneNumber: bestMatch.phoneNumber || "N/A",
+          registeredAt: bestMatch.createdAt,
+          role: "Cư dân"
         },
-        distance: bestDistance,
+        distance: bestDistance 
       });
     } else {
       // ❌ NO MATCH - Access Denied
@@ -177,7 +185,7 @@ router.get("/logs", async (req, res) => {
 router.get("/students", async (req, res) => {
   try {
     const students = await FaceData.find({})
-      .select("name studentId createdAt")
+      .select("name studentId email createdAt")
       .sort({ createdAt: -1 })
       .lean();
 

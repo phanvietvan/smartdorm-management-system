@@ -130,6 +130,7 @@ export default function Layout() {
     { to: '/app/rooms', icon: Bed, label: 'Phòng của tôi' },
     { to: '/app/bills', icon: Receipt, label: 'Hóa đơn' },
     { to: '/app/services', icon: Briefcase, label: 'Dịch vụ' },
+    { to: '/app/face-register', icon: ScanFace, label: 'An ninh Face-ID' },
     { to: '/app/settings', icon: Settings, label: 'Cài đặt' },
   ]
 
