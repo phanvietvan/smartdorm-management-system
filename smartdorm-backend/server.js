@@ -11,23 +11,9 @@ const swaggerSpec = require("./config/swagger");
 const app = express();
 const server = http.createServer(app);
 
-// 1. CORS PHẢI Ở TRÊN CÙNG
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:8081",
-  "http://localhost:3001",
-  "https://smartdorm-management-system-sooty.vercel.app",
-  "https://lenard-subentire-acknowledgingly.ngrok-free.app",
-  "https://lenard-subentire-acknowledgingly.ngrok-free.dev"
-];
-
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || origin.includes("localhost") || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.log("CORS Blocked for origin:", origin);

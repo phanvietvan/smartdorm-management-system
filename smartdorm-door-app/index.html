@@ -1,564 +1,255 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmartDorm Luxury Terminal</title>
-  <script src="face-api.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartDorm | Secure Elite Gate</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
   <style>
-    /* 
-       SMARTDORM LUXURY TERMINAL UI
-       Style: Minimalist Stealth Wealth, Obsidian & Gold
-    */
-    :root {
-      --accent: #d4af37; /* Royal Gold */
-      --accent-glow: rgba(212, 175, 55, 0.3);
-      --bg: #050505;
-      --card: rgba(15, 15, 15, 0.6);
-      --border: rgba(255, 255, 255, 0.05);
-      --success: #34d399;
-      --danger: #f87171;
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap');
+    :root { 
+      --gold: #C5A059; --bg: #050505; --panel: #0A0A0A; --text: #EAEAEA; --text-dim: #444;
+      --success: #00FFBB; --danger: #FF3366;
     }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
+    .header { height: 75px; padding: 0 60px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .logo { font-weight: 900; font-size: 20px; } .logo span { color: var(--gold); }
+    #clock { font-size: 16px; font-weight: 700; color: var(--gold); font-family: monospace; letter-spacing: 2px; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background: var(--bg);
-      background-image: 
-        radial-gradient(circle at 0% 0%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
-        radial-gradient(circle at 100% 100%, rgba(212, 175, 55, 0.02) 0%, transparent 50%);
-      color: #fff;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      -webkit-font-smoothing: antialiased;
+    .main { flex: 1; display: grid; grid-template-columns: 1fr 480px; }
+    
+    .scanner-side { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; border-right: 1px solid rgba(255,255,255,0.03); }
+    .video-shell { 
+      position: relative; 
+      width: 90%; 
+      max-width: 950px; 
+      aspect-ratio: 16/9; 
+      background: #080808;
+      border-radius: 40px; 
+      overflow: hidden; 
+      border: 2px solid rgba(255,255,255,0.08); 
+      box-shadow: 0 50px 120px rgba(0,0,0,1); 
     }
+    #video { width:100%; height:100%; object-fit: cover; transform: scaleX(-1); }
+    #canvas { position: absolute; inset:0; transform: scaleX(-1); z-index: 5; }
 
-    /* ===== TOP BAR ===== */
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 24px 60px;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(30px);
-      border-bottom: 1px solid var(--border);
-      z-index: 100;
+    /* FACE GUIDE OVERLAY */
+    .face-guide {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 280px; height: 380px;
+      border: 2px dashed rgba(197, 160, 89, 0.2);
+      border-radius: 150px;
+      z-index: 10; pointer-events: none;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-size: 20px;
-      font-weight: 300;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+    .face-guide::before, .face-guide::after {
+      content: ''; position: absolute; inset: -20px;
+      border: 2px solid transparent; border-radius: 40px;
     }
+    .face-guide.active { border-color: var(--success); border-style: solid; box-shadow: 0 0 50px rgba(0, 255, 187, 0.15); width: 300px; height: 400px; }
 
-    .brand-icon {
-      width: 36px; height: 36px;
-      border: 1px solid var(--accent);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700; color: var(--accent);
-      box-shadow: 0 0 15px var(--accent-glow);
+    .guide-corners {
+      position: absolute; inset: 40px; border: 1px solid rgba(255,255,255,0.03);
+      pointer-events: none; z-index: 9;
     }
-    .brand span { font-weight: 800; color: #fff; }
+    .corner { position: absolute; width: 30px; height: 30px; border: 2px solid var(--gold); opacity: 0.3; }
+    .top-l { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 15px 0 0 0; }
+    .top-r { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 15px 0 0; }
+    .bot-l { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 15px; }
+    .bot-r { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 15px 0; }
 
-    .top-right {
-      display: flex;
-      align-items: center;
-      gap: 32px;
+    .hud-banner {
+      position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
+      padding: 14px 40px; border-radius: 100px;
+      font-size: 11px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
+      border: 1px solid rgba(255,255,255,0.1); z-index: 10;
+      transition: all 0.4s; color: var(--gold);
     }
+    .hud-banner.active { color: var(--success); border-color: var(--success); box-shadow: 0 0 30px rgba(0, 255, 187, 0.2); }
+    .hud-banner.denied { color: var(--danger); border-color: var(--danger); }
 
-    .clock {
-      font-size: 14px;
-      font-weight: 400;
-      color: rgba(255,255,255,0.4);
-      letter-spacing: 0.05em;
-    }
+    .panel-side { background: var(--panel); padding: 40px; display: flex; flex-direction: column; gap: 20px; }
+    .profile-card { background: rgba(255,255,255,0.01); border: 1.5px solid rgba(255,255,255,0.03); border-radius: 40px; padding: 35px 25px; text-align: center; transition: 0.5s; }
+    .profile-card.granted { border-color: var(--success); }
+    .profile-card.denied { border-color: var(--danger); }
+    
+    .user-name { font-size: 32px; font-weight: 900; margin-bottom: 25px; letter-spacing: -1.5px; }
+    .info-list { display: grid; grid-template-columns: 1fr; gap: 8px; text-align: left; }
+    .info-item { background: rgba(255,255,255,0.02); padding: 14px 22px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; }
+    .info-item span:first-child { color: var(--text-dim); text-transform: uppercase; font-weight: 900; font-size: 9px; }
+    .info-item span:last-child { font-size: 13px; font-weight: 600; color: #fff; }
 
-    .status-badge {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      padding: 6px 16px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      transition: all 0.5s;
-    }
-    .status-badge.ready { color: var(--accent); border-color: var(--accent-glow); background: rgba(212,175,55,0.05); }
-
-    /* ===== GRID ===== */
-    .main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 500px 1fr;
-      padding: 40px 60px;
-      gap: 60px;
-      overflow: hidden;
-    }
-
-    /* ===== LEFT PANEL ===== */
-    .cam-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-    }
-
-    .panel-heading {
-      font-size: 9px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.2);
-      text-transform: uppercase;
-      letter-spacing: 0.4em;
-    }
-
-    .cam-box {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1/1; /* Square for focus */
-      background: #000;
-      border-radius: 40px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      box-shadow: 0 30px 80px rgba(0,0,0,0.8);
-    }
-
-    #video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-
-    /* Luxury HUD */
-    .scan-guide {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 240px; height: 240px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.03);
-      z-index: 10;
-    }
-
-    .scan-ring {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 200px; height: 200px;
-      border-radius: 50%;
-      border: 1px solid rgba(212, 175, 55, 0.1);
-      z-index: 11;
-      transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .scan-ring.scanning {
-      border: 1px solid var(--accent);
-      box-shadow: 0 0 30px var(--accent-glow), inset 0 0 30px var(--accent-glow);
-      animation: ambient-grow 3s infinite;
-    }
-
-    .scan-ring.granted { border: 2px solid var(--success); box-shadow: 0 0 50px rgba(52, 211, 153, 0.2); transform: translate(-50%, -50%) scale(1.1); }
-    .scan-ring.denied { border: 2px solid var(--danger); box-shadow: 0 0 50px rgba(248, 113, 113, 0.2); transform: translate(-50%, -50%) scale(0.95); }
-
-    @keyframes ambient-grow { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; } 50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.8; } }
-
-    .luxury-line {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      z-index: 5;
-      animation: scan-lux 4s ease-in-out infinite;
-      opacity: 0.3;
-    }
-
-    @keyframes scan-lux { 0% { top: 10%; } 100% { top: 90%; } }
-
-    /* Elegant corners */
-    .corner { position: absolute; width: 40px; height: 40px; border: 1px solid var(--accent-glow); z-index: 20; }
-    .tl { top: 40px; left: 40px; border-right: 0; border-bottom: 0; }
-    .tr { top: 40px; right: 40px; border-left: 0; border-bottom: 0; }
-    /* Hidden to keep it minimal */
-
-    .footer-note {
-      font-size: 10px;
-      color: rgba(255,255,255,0.15);
-      line-height: 1.8;
-      font-weight: 500;
-      text-align: center;
-      letter-spacing: 0.02em;
-    }
-
-    /* ===== RIGHT PANEL ===== */
-    .right-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 48px;
-    }
-
-    .result-display {
-      background: var(--card);
-      backdrop-filter: blur(40px);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      padding: 48px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-
-    .result-display.granted { border-color: rgba(52, 211, 153, 0.2); background: rgba(52, 211, 153, 0.02); }
-    .result-display.denied { border-color: rgba(248, 113, 113, 0.2); background: rgba(248, 113, 113, 0.02); }
-
-    .avatar-ring {
-      width: 100px; height: 100px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 24px;
-      transition: all 0.5s;
-    }
-    .result-display.granted .avatar-ring { border-color: var(--success); color: var(--success); box-shadow: 0 0 30px rgba(52, 211, 153, 0.1); }
-    .result-display.denied .avatar-ring { border-color: var(--danger); color: var(--danger); }
-
-    .status-text {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.3em;
-      color: var(--accent);
-      text-transform: uppercase;
-      margin-bottom: 24px;
-      display: flex; align-items: center; gap: 8px; justify-content: center;
-    }
-
-    .status-text::before, .status-text::after { content: ''; width: 20px; height: 1px; background: var(--accent-glow); }
-
-    .main-name {
-      font-size: 38px;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-      color: #fff;
-      margin-bottom: 30px;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.5s 0.2s;
-    }
-    .result-display.granted .info-grid { opacity: 1; transform: translateY(0); }
-
-    .info-item {
-      background: rgba(255,255,255,0.03);
-      padding: 16px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      text-align: left;
-    }
-    .info-item .label {
-      font-size: 9px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.2);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 4px;
-    }
-    .info-item .val {
-      font-size: 15px;
-      font-weight: 700;
-      color: rgba(255,255,255,0.9);
-    }
-
-    /* HISTORY */
-    .history {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      overflow: hidden;
-    }
-
-    .history-label {
-      font-size: 9px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.2);
-      letter-spacing: 0.4em;
-      display: flex; align-items: center; gap: 20px;
-    }
-    .history-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    .log-list {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 10px;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    .log-list::-webkit-scrollbar { width: 2px; }
-    .log-list::-webkit-scrollbar-thumb { background: var(--border); }
-
-    .log-item {
-      padding: 16px 24px;
-      background: rgba(255,255,255,0.01);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      display: flex; align-items: center; gap: 24px;
-      transition: all 0.3s;
-    }
-
-    .log-item:hover { background: rgba(255,255,255,0.02); }
-
-    .log-time { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.15); font-variant-numeric: tabular-nums; }
-    .log-name { flex: 1; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); }
-    .log-tag { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.4; }
-
+    .log-stack { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+    .log-row { background: rgba(255,255,255,0.02); padding: 15px 24px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; border-left: 4px solid var(--gold); }
   </style>
 </head>
-
-<body>
-
-  <div class="top-bar">
-    <div class="brand">
-      <div class="brand-icon">SD</div>
-      SmartDorm<span>.</span>
-    </div>
-    <div class="top-right">
-      <div class="clock" id="clock">-- : -- : --</div>
-      <div class="status-badge ready" id="statusBadge">Hệ thống an toàn</div>
-    </div>
+<body onload="boot()">
+  <div class="header">
+    <div class="logo">SMART<span>DORM</span> • ELITE LOCK</div>
+    <div id="clock">00:00:00</div>
   </div>
 
   <div class="main">
-    <!-- Camera -->
-    <div class="cam-panel">
-      <div class="panel-heading">Hệ thống nhận diện</div>
-      
-      <div class="cam-box">
-        <video id="video" autoplay muted playsinline></video>
-        <div class="luxury-line"></div>
-        <div class="scan-guide"></div>
-        <div class="scan-ring" id="scanRing"></div>
-        
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
+    <div class="scanner-side">
+      <div id="booting" style="position:absolute; inset:0; background:#000; z-index:100; display:flex; align-items:center; justify-content:center;">
+        <p style="color:var(--gold); font-size:12px; font-weight:900; letter-spacing:10px;">SECURE BOOTING...</p>
       </div>
-
-      <div class="footer-note">
-        Thiết bị an ninh SmartDorm tích hợp trí tuệ nhân tạo.<br>
-        Vui lòng đứng thẳng và giữ khoảng cách ổn định để nhận diện.
+      <div class="hud-banner" id="hud">HÃY CHỚP MẮT ĐỂ MỞ CỬA</div>
+      <div class="video-shell" id="vShell" style="display:none;">
+        <div class="face-guide" id="fGuide"></div>
+        <div class="guide-corners">
+          <div class="corner top-l"></div><div class="corner top-r"></div>
+          <div class="corner bot-l"></div><div class="corner bot-r"></div>
+        </div>
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="canvas"></canvas>
       </div>
     </div>
 
-    <!-- Info -->
-    <div class="right-panel">
-      <div class="result-display" id="resultCard">
-        <div class="avatar-ring" id="resultIcon">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        </div>
-        <div class="status-text" id="resultSub">HỆ THỐNG GIÁM SÁT</div>
-        <h2 class="main-name" id="resultName">ĐỢI NHẬN DIỆN</h2>
-        
-        <div class="info-grid" id="infoGrid">
-          <div class="info-item"><div class="label">Mã số</div><div class="val" id="valID">--</div></div>
-          <div class="info-item"><div class="label">Email</div><div class="val" id="valEmail">--</div></div>
-          <div class="info-item"><div class="label">Vai trò</div><div class="val" id="valRole">--</div></div>
-          <div class="info-item"><div class="label">Phòng</div><div class="val" id="valRoom">--</div></div>
-          <div class="info-item"><div class="label">Tòa nhà</div><div class="val" id="valBlock">--</div></div>
+    <div class="panel-side">
+      <div class="profile-card" id="pCard">
+        <h2 class="user-name" id="userName">--- ---</h2>
+        <div class="info-list">
+          <div class="info-item"><span>Mã số</span><span id="resID">--</span></div>
+          <div class="info-item"><span>Vị trí</span><span id="resLoc">--</span></div>
+          <div class="info-item"><span>Email</span><span id="resEmail">--</span></div>
+          <div class="info-item"><span>SĐT</span><span id="resSdt">--</span></div>
+          <div class="info-item"><span>Vai trò</span><span id="resRole">--</span></div>
         </div>
       </div>
-
-      <div class="history">
-        <div class="history-label">Lịch sử ra vào</div>
-        <div class="log-list" id="logList">
-          <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.05); font-size: 10px; font-weight: 800; letter-spacing: 0.2em;">
-            Chưa có ghi nhận
-          </div>
-        </div>
-      </div>
+      <div class="log-stack" id="logs"><p style="font-size:9px; font-weight:900; color:#444; letter-spacing:2px; margin-bottom:5px;">LỊCH SỬ TRUY CẬP</p></div>
     </div>
   </div>
 
   <script>
-    /* 
-       LOGIC CONFIGURATION (KHÔNG ĐỔI)
-    */
-    const API_URL = 'http://localhost:5000';
-    const SCAN_INTERVAL = 2000;
-    const DEBOUNCE_MS = 4000;
+    let currentID = null, gone = 0, busy = false;
+    let eyesClosed = false, blinkDetected = false;
 
-    let isScanning = false;
-    let lastMatchTime = 0;
-    let hasLogs = false;
-
-    // DOM
-    const video = document.getElementById('video');
-    const scanRing = document.getElementById('scanRing');
-    const statusBadge = document.getElementById('statusBadge');
-    const resultCard = document.getElementById('resultCard');
-    const resultIcon = document.getElementById('resultIcon');
-    const resultName = document.getElementById('resultName');
-    const resultSub = document.getElementById('resultSub');
-    const logList = document.getElementById('logList');
-    const clock = document.getElementById('clock');
-
-    setInterval(() => {
-      clock.textContent = new Date().toLocaleTimeString('vi-VN');
-    }, 1000);
-
-    // --- 1. Camera ---
-    async function startCamera() {
+    async function boot() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
-        });
-        video.srcObject = stream;
-      } catch (err) {
-        showResult('denied', '!', 'Lỗi thiết bị', 'Không tìm thấy Camera');
-      }
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('./models_v2'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('./models_v2'),
+          faceapi.nets.faceRecognitionNet.loadFromUri('./models_v2')
+        ]);
+        const s = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+        document.getElementById('video').srcObject = s;
+        document.getElementById('booting').style.display = 'none';
+        document.getElementById('vShell').style.display = 'block';
+        loop();
+      } catch (err) { console.error(err); }
     }
 
-    // --- 2. Models ---
-    async function loadModels() {
-      try {
-        await faceapi.nets.tinyFaceDetector.loadFromUri('./models_v2');
-        await faceapi.nets.faceLandmark68Net.loadFromUri('./models_v2');
-        await faceapi.nets.faceRecognitionNet.loadFromUri('./models_v2');
-        
-        statusBadge.textContent = 'Trạng thái: Sẵn sàng';
-        scanRing.className = 'scan-ring scanning';
-        return true;
-      } catch (err) {
-        statusBadge.textContent = 'Lỗi AI Engine';
-        return false;
-      }
-    }
+    let lastLandmarks = null, motionBuffer = [], faceStableCounter = { current: 0 };
 
-    // --- 3. Scanning ---
-    async function scanFace() {
-      if (isScanning) return;
-      if (Date.now() - lastMatchTime < DEBOUNCE_MS) return;
+    async function loop() {
+      const v = document.getElementById('video');
+      const step = async () => {
+        if (v.paused || v.ended) return requestAnimationFrame(step);
+        const d = await faceapi.detectSingleFace(v, new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.5 }))
+                                .withFaceLandmarks().withFaceDescriptor();
+        if (d) {
+          gone = 0;
+          document.getElementById('fGuide').classList.add('active');
+          
+          // PHÂN TÍCH VI CHUYỂN ĐỘNG (Liveness ngầm)
+          if (lastLandmarks) {
+            const current = d.landmarks.positions;
+            const diff = current.reduce((acc, p, i) => acc + Math.abs(p.x - lastLandmarks[i].x) + Math.abs(p.y - lastLandmarks[i].y), 0);
+            motionBuffer.push(diff);
+            if (motionBuffer.length > 25) motionBuffer.shift(); // Lưu ~1 giây dữ liệu
+          }
+          lastLandmarks = d.landmarks.positions;
 
-      isScanning = true;
-
-      try {
-        const detection = await faceapi
-          .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-          .withFaceLandmarks()
-          .withFaceDescriptor();
-
-        if (!detection) {
-          resetResult();
-          isScanning = false;
-          return;
+          // SIÊU NHẠY: Chỉ cần 3 khung hình liên tiếp là gọi xác thực ngay
+          faceStableCounter.current++;
+          if (faceStableCounter.current >= 3) {
+             updateStatus("ĐANG XÁC THỰC...", "active");
+             await verify(d.descriptor);
+             faceStableCounter.current = 0;
+          }
+        } else {
+          gone++; faceStableCounter.current = 0;
+          document.getElementById('fGuide').classList.remove('active');
+          if (gone > 30) { 
+            currentID = null; 
+            document.getElementById('pCard').className = "profile-card"; 
+            updateStatus("CHỜ NHẬN DIỆN", ""); 
+          }
         }
+        requestAnimationFrame(step);
+      }; 
+      step();
+    }
 
-        const faceDescriptor = Array.from(detection.descriptor);
+    function getEAR(lm) {
+      const l = lm.getLeftEye(), r = lm.getRightEye();
+      const dist = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+      return ((dist(l[1], l[5]) + dist(l[2], l[4])) / (2 * dist(l[0], l[3])) + (dist(r[1], r[5]) + dist(r[2], r[4])) / (2 * dist(r[0], r[3]))) / 2;
+    }
 
-        const res = await fetch(`${API_URL}/face/recognize`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ faceDescriptor, deviceId: 'gate-lux' }),
+    async function verify(desc) {
+      if (busy) return; busy = true;
+      try {
+        const res = await fetch('http://localhost:5000/face/recognize', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ faceDescriptor: Array.from(desc) })
         });
-
         const data = await res.json();
+        const dist = data.distance ? ` (D: ${data.distance.toFixed(3)})` : "";
 
         if (data.success) {
-          showResult('granted', '✓', data.student.name, data.student);
-          addLog(`${data.student.name} (${data.student.studentId})`, 'granted');
-          scanRing.className = 'scan-ring granted';
-          lastMatchTime = Date.now();
-
-          setTimeout(() => {
-            resetResult();
-            scanRing.className = 'scan-ring scanning';
-          }, 4500);
+          if (data.user.studentId !== currentID) {
+            currentID = data.user.studentId;
+            updateStatus("THÀNH CÔNG" + dist, "active");
+            updateUI(data.user);
+            setTimeout(() => { if (currentID) updateStatus("ĐANG TRỰC CHIẾN", ""); }, 4000);
+          }
         } else {
-          showResult('denied', '✕', 'Không nhận diện', 'Vui lòng kiểm tra lại');
-          addLog('Truy cập không xác định', 'denied');
-          scanRing.className = 'scan-ring denied';
-
-          setTimeout(() => {
-            resetResult();
-            scanRing.className = 'scan-ring scanning';
-          }, 3000);
+          updateStatus("TỪ CHỐI" + dist, "denied");
+          showFail();
+          setTimeout(() => { if (!currentID) updateStatus("HÃY CHỚP MẮT TỰ NHIÊN", ""); }, 3000);
         }
-      } catch (err) {
-        console.error('Core error:', err);
-      }
-
-      isScanning = false;
+      } catch (err) { updateStatus("LỖI KẾT NỐI", "denied"); } finally { busy = false; }
     }
 
-    function showResult(type, icon, name, student) {
-      resultCard.className = `result-display ${type}`;
-      resultIcon.innerHTML = icon === '✓' 
-        ? '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>'
-        : icon === '✕'
-        ? '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
-        : '⚠️';
+    function updateStatus(t, c) { const h = document.getElementById('hud'); h.textContent = t; h.className = "hud-banner " + (c || ""); }
+
+    function updateUI(u) {
+      document.getElementById('userName').textContent = u.name;
+      document.getElementById('resID').textContent = u.studentId;
+      document.getElementById('resLoc').textContent = (u.room || "P.") + " • " + (u.block || "Tòa");
+      document.getElementById('resEmail').textContent = u.email || "N/A";
+      document.getElementById('resSdt').textContent = u.phoneNumber || "N/A";
+      document.getElementById('resRole').textContent = u.role || "Cư dân";
+      document.getElementById('pCard').className = "profile-card granted";
       
-      resultName.textContent = name;
-      resultSub.textContent = type === 'granted' ? 'XÁC NHẬN TRUY CẬP' : 'TỪ CHỐI TRUY CẬP';
-
-      if (student) {
-        document.getElementById('valID').textContent = student.studentId;
-        document.getElementById('valEmail').textContent = student.email || 'N/A';
-        document.getElementById('valRole').textContent = student.role || 'Cư dân';
-        document.getElementById('valRoom').textContent = student.room || '---';
-        document.getElementById('valBlock').textContent = student.block || '---';
-      }
-    }
-
-    function resetResult() {
-      resultCard.className = 'result-display';
-      resultIcon.innerHTML = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
-      resultName.textContent = 'ĐỢI NHẬN DIỆN';
-      resultSub.textContent = 'HỆ THỐNG GIÁM SÁT';
-      document.getElementById('valID').textContent = '--';
-      document.getElementById('valEmail').textContent = '--';
-      document.getElementById('valRole').textContent = '--';
-      document.getElementById('valRoom').textContent = '--';
-      document.getElementById('valBlock').textContent = '--';
-    }
-
-    function addLog(text, type) {
-      if (!hasLogs) {
-        logList.innerHTML = '';
-        hasLogs = true;
-      }
-      const time = new Date().toLocaleTimeString('vi-VN');
+      const time = new Date().getHours().toString().padStart(2, '0') + ":" + new Date().getMinutes().toString().padStart(2, '0') + ":" + new Date().getSeconds().toString().padStart(2, '0');
       const item = document.createElement('div');
-      item.className = 'log-item';
-      item.innerHTML = `
-        <div class="log-time">${time}</div>
-        <div class="log-name">${text}</div>
-        <div class="log-tag" style="color:${type==='granted'?'var(--success)':'var(--danger)'}">
-          ${type==='granted'?'RA VÀO':'BỊ CHẶN'}
-        </div>
-      `;
-      logList.insertBefore(item, logList.firstChild);
+      item.className = 'log-row';
+      item.innerHTML = `<span>${time}</span><b>${u.name}</b><span style="color:var(--success); font-weight:900;">OK</span>`;
+      const list = document.getElementById('logs');
+      list.insertBefore(item, list.firstChild.nextSibling); 
     }
 
-    async function init() {
-      await startCamera();
-      const ok = await loadModels();
-      if (ok) setInterval(scanFace, SCAN_INTERVAL);
+    function showFail() {
+      document.getElementById('pCard').className = "profile-card denied";
+      document.getElementById('userName').textContent = "BỊ TỪ CHỐI";
+      const time = new Date().getHours().toString().padStart(2, '0') + ":" + new Date().getMinutes().toString().padStart(2, '0') + ":" + new Date().getSeconds().toString().padStart(2, '0');
+      const item = document.createElement('div');
+      item.className = 'log-row';
+      item.style.borderLeftColor = 'var(--danger)';
+      item.innerHTML = `<span>${time}</span><b>Người lạ</b><span style="color:var(--danger); font-weight:900;">FAIL</span>`;
+      const list = document.getElementById('logs');
+      list.insertBefore(item, list.firstChild.nextSibling);
+      setTimeout(() => { if (!currentID) document.getElementById('pCard').className = "profile-card"; }, 4000);
     }
 
-    init();
+    setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('vi-VN'); }, 1000);
   </script>
 </body>
 </html>
