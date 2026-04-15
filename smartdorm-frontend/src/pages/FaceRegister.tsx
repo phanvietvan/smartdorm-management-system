@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import Webcam from 'react-webcam'
 import * as faceapi from 'face-api.js'
 import { api } from '../api/client'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { 
   ScanFace, 
   CheckCircle2, 
@@ -32,11 +32,10 @@ export default function FaceRegister() {
   const [modelsLoaded, setModelsLoaded] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'warning' | ''; text: string }>({ type: '', text: '' })
   const [faceDetected, setFaceDetected] = useState(false)
-  const [earValue, setEarValue] = useState(0)
   const [registeredStudents, setRegisteredStudents] = useState<any[]>([])
   
   const webcamRef = useRef<Webcam>(null)
-  const requestRef = useRef<number>()
+  const requestRef = useRef<number | null>(null)
   const faceStableCounter = useRef(0)
 
   const getEAR = (eye: any[]) => {
@@ -106,7 +105,6 @@ export default function FaceRegister() {
         setFaceDetected(true)
         const landmarks = d.landmarks
         const ear = (getEAR(landmarks.getLeftEye()) + getEAR(landmarks.getRightEye())) / 2
-        setEarValue(ear)
         
         faceStableCounter.current++
         if (ear < 0.28 || faceStableCounter.current > 60) { 
@@ -134,7 +132,7 @@ export default function FaceRegister() {
     }
     loadModels()
     requestRef.current = requestAnimationFrame(processFrame)
-    return () => cancelAnimationFrame(requestRef.current!)
+    return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current) }
   }, [processFrame])
 
   return (

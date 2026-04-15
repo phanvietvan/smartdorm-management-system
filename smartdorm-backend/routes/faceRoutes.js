@@ -5,7 +5,7 @@ const CheckinLog = require("../models/CheckinLog");
 
 /**
  * POST /face/register
- * Đăng ký khuôn mặt mới cho cư dân
+ * Đăng ký hoặc cập nhật khuôn mặt cho cư dân
  */
 router.post("/register", async (req, res) => {
   try {
@@ -15,19 +15,29 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ success: false, message: "Thiếu thông tin bắt buộc" });
     }
 
-    if (role !== "admin") {
-      const existing = await FaceData.findOne({ studentId });
-      if (existing) {
-        return res.status(409).json({ success: false, message: `Mã cư dân ${studentId} đã được đăng ký khuôn mặt.` });
-      }
+    // TÌM KIẾM CƯ DÂN CŨ ĐỂ CẬP NHẬT HOẶC TẠO MỚI (Upsert)
+    const existing = await FaceData.findOne({ studentId });
+    
+    if (existing) {
+      // Nếu đã có, tiến hành CẬP NHẬT (Update) thay vì báo lỗi 409
+      existing.name = name;
+      existing.email = email;
+      existing.room = room;
+      existing.block = block;
+      existing.phoneNumber = phoneNumber;
+      existing.faceDescriptor = faceDescriptor;
+      await existing.save();
+      return res.json({ success: true, message: `Đã cập nhật FaceID cho cư dân ${name}` });
     }
 
+    // Nếu chưa có, tạo mới
     const faceData = new FaceData({ name, studentId, email, room, block, phoneNumber, faceDescriptor });
     await faceData.save();
 
     res.status(201).json({ success: true, message: "Đăng ký thành công!", student: { name, studentId } });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    console.error("❌ REGISTER ERROR:", error);
+    res.status(500).json({ success: false, message: "Lỗi hệ thống", error: error.message });
   }
 });
 

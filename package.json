@@ -1,0 +1,16 @@
+{
+  "name": "smartdorm-management-system",
+  "version": "1.0.0",
+  "description": "SmartDorm Management System Monorepo",
+  "scripts": {
+    "build:frontend": "npm run build --prefix smartdorm-frontend",
+    "build": "npm run build:frontend",
+    "dev:frontend": "npm run dev --prefix smartdorm-frontend",
+    "dev:backend": "npm run dev --prefix smartdorm-backend",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "install:all": "npm install --prefix smartdorm-frontend && npm install --prefix smartdorm-backend && npm install --prefix smartdorm-mobile"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

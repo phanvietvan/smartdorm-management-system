@@ -12,9 +12,14 @@ export type User = {
   roomId?: string | { _id: string; name: string }
   managedAreaId?: string | { _id: string; name: string }
   phone?: string
+  phoneNumber?: string
   avatarUrl?: string
   idCardNumber?: string
   address?: string
+  name?: string
+  username?: string
+  studentId?: string
+  room?: any
 }
 
 export const authApi = {

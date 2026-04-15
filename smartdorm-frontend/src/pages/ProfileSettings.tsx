@@ -139,7 +139,7 @@ export default function ProfileSettings() {
   useEffect(() => {
     if (user) {
       authApi.me().then(res => {
-        const u = res.data.user || res.data
+        const u = res.data
         setProfileForm({
           fullName: u.fullName || u.name || '',
           phone: u.phone || u.phoneNumber || '',
