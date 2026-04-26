@@ -7,6 +7,7 @@ import { usersApi, type User } from '../api/users'
 import { useAuth } from '../context/AuthContext'
 import { cn } from '../lib/utils'
 import { useSocket } from '../hooks/useSocket'
+import { paymentsApi } from '../api/payments'
 
 export default function Bills() {
   const { user } = useAuth()
@@ -21,6 +22,7 @@ export default function Bills() {
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [processingVnpay, setProcessingVnpay] = useState(false)
   const [form, setForm] = useState({ 
     roomId: '', 
     tenantId: '', 
@@ -107,6 +109,34 @@ export default function Bills() {
       })
       .catch((err) => setError(err.response?.data?.message || 'Lỗi thêm hóa đơn'))
       .finally(() => setSubmitting(false))
+  }
+
+  const handleVnpayPayment = async () => {
+    const pendingBills = bills.filter(b => b.status === 'pending' || b.status === 'unpaid')
+    if (pendingBills.length === 0) {
+      alert('Bạn không có hóa đơn nào cần thanh toán.')
+      return
+    }
+
+    // Lấy hóa đơn mới nhất (hoặc hóa đơn có tổng nợ cao nhất)
+    const targetBill = pendingBills[0]
+    const totalAmount = pendingBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0)
+
+    setProcessingVnpay(true)
+    try {
+      const res = await paymentsApi.createVnpUrl({
+        billId: targetBill._id,
+        amount: totalAmount, // Thanh toán tổng dư nợ
+        language: 'vn'
+      })
+      if (res.data?.vnpUrl) {
+        window.location.href = res.data.vnpUrl
+      }
+    } catch (e: any) {
+      alert(e?.response?.data?.message || 'Không thể kết nối tới VNPAY')
+    } finally {
+      setProcessingVnpay(false)
+    }
   }
 
   const statusLabel: Record<string, string> = { pending: 'Chờ thanh toán', paid: 'Đã thanh toán', overdue: 'Đã quá hạn' }
@@ -344,10 +374,18 @@ export default function Bills() {
                 </div>
                 
                 <div className="flex gap-4">
-                  <Link to="/app/payments" className="bg-white text-indigo-500 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.03] active:scale-[0.98] transition-all flex items-center gap-3 shadow-xl">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    Thanh toán ngay
-                  </Link>
+                  <button 
+                    onClick={handleVnpayPayment}
+                    disabled={processingVnpay}
+                    className="bg-white text-[#4b49cb] px-10 py-5 rounded-3xl font-black text-sm uppercase tracking-widest hover:scale-[1.03] active:scale-[0.98] transition-all flex items-center gap-4 shadow-2xl shadow-indigo-900/10 group disabled:opacity-70"
+                  >
+                    {processingVnpay ? (
+                      <div className="w-5 h-5 border-2 border-[#4b49cb] border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">account_balance_wallet</span>
+                    )}
+                    {processingVnpay ? 'ĐANG CHUYỂN...' : 'THANH TOÁN NGAY'}
+                  </button>
                   <button className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all flex items-center gap-3 backdrop-blur-sm">
                     Cài đặt thanh toán
                   </button>

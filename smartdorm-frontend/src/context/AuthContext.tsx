@@ -49,9 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const needsLoading = !user || user.status !== 'approved'
       if (needsLoading) setLoading(true)
       authApi.me()
-        .then((r: { data: User }) => {
-          setUser(r.data)
-          localStorage.setItem('user', JSON.stringify(r.data))
+        .then((r) => {
+          const fetchedUser = r.data.user
+          setUser(fetchedUser)
+          localStorage.setItem('user', JSON.stringify(fetchedUser))
         })
         .catch(() => { 
           localStorage.removeItem('token')

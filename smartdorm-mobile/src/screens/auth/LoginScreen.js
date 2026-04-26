@@ -32,13 +32,23 @@ export default function LoginScreen({ navigation }) {
     iosClientId: GOOGLE_CLIENT_ID_IOS,
     webClientId: GOOGLE_CLIENT_ID_WEB,
     scopes: ['profile', 'email'],
+    // Đảm bảo redirectUri được xác định rõ ràng cho môi trường Web
+    redirectUri: makeRedirectUri({
+      preferLocalhost: true,
+    }),
   });
 
   useEffect(() => {
+    console.log('--- Google Auth Response ---');
+    console.log('Type:', response?.type);
     if (response?.type === 'success') {
+      console.log('Auth success, handling response...');
       handleGoogleResponse(response);
     } else if (response?.type === 'error') {
+      console.error('Auth error:', response.error);
       Alert.alert('Lỗi Google', response.error?.message || 'Đăng nhập Google thất bại');
+    } else if (response?.type === 'cancel') {
+      console.log('Auth cancelled by user');
     }
   }, [response]);
 

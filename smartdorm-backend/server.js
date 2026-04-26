@@ -11,18 +11,16 @@ const swaggerSpec = require("./config/swagger");
 const app = express();
 const server = http.createServer(app);
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${req.headers.origin}`);
+  next();
+});
+
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || origin.includes("localhost") || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log("CORS Blocked for origin:", origin);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: true, // Phản hồi lại origin của request
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "ngrok-skip-browser-warning"]
 }));
 
 // 2. Middleware cơ bản

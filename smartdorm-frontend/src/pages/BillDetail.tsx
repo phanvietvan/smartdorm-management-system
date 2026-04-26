@@ -187,17 +187,17 @@ export default function BillDetail() {
               <button
                 onClick={handleVnpayPayment}
                 disabled={processingVnpay}
-                className="px-8 py-3.5 bg-[#005BAA] hover:bg-[#004f94] text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-200 flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="px-8 py-3.5 bg-white hover:bg-slate-50 text-[#4b49cb] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-indigo-100 flex justify-center items-center gap-3 border border-indigo-50 disabled:opacity-70 disabled:cursor-not-allowed group"
               >
                 {processingVnpay ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#4b49cb]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     Đang xử lý...
                   </>
                 ) : (
                   <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                    Thanh toán qua VNPAY
+                    <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">account_balance_wallet</span>
+                    THANH TOÁN NGAY
                   </>
                 )}
               </button>

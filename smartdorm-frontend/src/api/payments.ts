@@ -21,5 +21,6 @@ export const paymentsApi = {
     api.post<{ success: boolean; data: Payment }>('/payments', data),
   createVnpUrl: (data: { billId: string; amount: number; bankCode?: string; language?: string }) =>
     api.post<{ success: boolean; vnpUrl: string; data: { orderId: string } }>('/payments/vnpay/create-url', data),
+  checkVnpStatus: (params: string) => api.get<{ success: boolean; message: string; data: Payment }>(`/payments/vnpay/check?${params}`),
   confirm: (id: string) => api.put<{ success: boolean; data: Payment }>(`/payments/${id}/confirm`),
 }

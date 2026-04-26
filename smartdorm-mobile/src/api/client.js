@@ -2,13 +2,15 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Đổi thành URL ngrok của bạn khi production
+// TIP: Nếu test trên trình duyệt máy tính, bạn có thể dùng 'http://localhost:5000' để tránh lỗi ngrok warning
 const API_BASE_URL = 'https://lenard-subentire-acknowledgingly.ngrok-free.app';
 
 const client = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true',
+    'Accept': 'application/json',
+    'ngrok-skip-browser-warning': '69420', // Header đặc biệt để bỏ qua trang cảnh báo của ngrok
   },
   timeout: 15000,
 });

@@ -159,6 +159,43 @@ exports.vnpayIpn = async (req, res) => {
   }
 };
 
+exports.checkVnpayStatus = async (req, res) => {
+  try {
+    const vnp_Params = req.query;
+    const isValid = vnpayService.verifySignature(vnp_Params);
+
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'Invalid signature' });
+    }
+
+    const orderId = vnp_Params.vnp_TxnRef;
+    const payment = await Payment.findOne({ orderId });
+
+    if (!payment) {
+        return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (payment.status === 'confirmed') {
+        return res.status(200).json({ success: true, message: 'Payment confirmed', data: payment });
+    }
+
+    const responseCode = vnp_Params.vnp_ResponseCode;
+    if (responseCode === '00') {
+      payment.vnpayData = vnp_Params;
+      payment.status = 'confirmed';
+      await payment.save();
+      await Bill.findByIdAndUpdate(payment.billId, { status: 'paid' });
+      return res.status(200).json({ success: true, message: 'Payment success', data: payment });
+    } else {
+      payment.status = 'failed';
+      await payment.save();
+      return res.status(400).json({ success: false, message: 'Payment failed' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.getPaymentStats = async (req, res) => {
   try {
     const query = filterByRole(req);
